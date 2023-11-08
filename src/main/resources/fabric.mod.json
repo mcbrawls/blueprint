@@ -1,0 +1,47 @@
+{
+	"schemaVersion": 1,
+	"id": "blueprint",
+	"version": "${version}",
+	"name": "Blueprint",
+	"description": "A library and development interface for creating reusable structures.",
+	"authors": [
+		"Andante"
+	],
+	"contact": {
+		"homepage": "https://github.com/mcbrawls/blueprint",
+		"sources": "https://github.com/mcbrawls/blueprint",
+        "issues": "https://github.com/mcbrawls/blueprint/issues"
+    },
+	"license": "MIT",
+	"icon": "assets/blueprint/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			{
+				"value": "net.mcbrawls.blueprint.Blueprint",
+				"adapter": "kotlin"
+			}
+		],
+		"client": [
+			{
+				"value": "net.mcbrawls.blueprint.BlueprintClient",
+				"adapter": "kotlin"
+			}
+		]
+	},
+	"mixins": [
+		"blueprint.mixins.json",
+		{
+			"config": "blueprint.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.14",
+		"minecraft": "~1.20.2",
+		"java": ">=17",
+		"fabric-api": ">=0.90",
+		"fabric-language-kotlin": ">=1.9",
+        "bubble": ">=1.0"
+	}
+}

@@ -1,0 +1,105 @@
+//file:noinspection All
+
+plugins {
+    id "fabric-loom" version "1.4-SNAPSHOT"
+    id "org.jetbrains.kotlin.jvm"
+    id "maven-publish"
+}
+
+def ENV = System.getenv()
+
+version = mod_version
+group = maven_group
+
+base {
+    archivesName = mod_id
+}
+
+repositories {
+    maven {
+        name = "Andante"
+        url  = "https://maven.andante.dev/releases/"
+    }
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        mod_id {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:$minecraft_version"
+    mappings "net.fabricmc:yarn:$minecraft_version+build.$yarn_build:v2"
+    modImplementation "net.fabricmc:fabric-loader:$loader_version"
+
+    modImplementation "net.fabricmc.fabric-api:fabric-api:$fabric_version"
+    modImplementation "net.fabricmc:fabric-language-kotlin:$fabric_kotlin_version"
+
+    include modImplementation ("dev.andante:bubble:$bubble_version")
+    include modImplementation ("dev.andante:audience:$audience_version")
+    include modImplementation ("dev.andante:codex:$codex_version")
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 17
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = 17
+    }
+}
+
+java {
+    withSourcesJar()
+
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${base.archivesName.get()}"}
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact(sourcesJar) {
+                builtBy remapSourcesJar
+            }
+        }
+    }
+
+    repositories {
+        // Andante's Maven
+        def mavenUsername = ENV["MAVEN_USERNAME_ANDANTE"]
+        def mavenPassword = ENV["MAVEN_PASSWORD_ANDANTE"]
+        if (mavenUsername && mavenPassword) {
+            maven {
+                name = "Andante"
+                url  = "https://maven.andante.dev/releases/"
+                credentials.username = mavenUsername
+                credentials.password = mavenPassword
+            }
+        }
+    }
+}
