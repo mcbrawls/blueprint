@@ -18,7 +18,7 @@
 	"entrypoints": {
 		"main": [
 			{
-				"value": "net.mcbrawls.blueprint.Blueprint",
+				"value": "net.mcbrawls.blueprint.BlueprintMod",
 				"adapter": "kotlin"
 			}
 		],
