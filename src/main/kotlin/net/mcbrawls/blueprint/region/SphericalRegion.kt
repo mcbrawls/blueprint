@@ -3,8 +3,8 @@ package net.mcbrawls.blueprint.region
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.mcbrawls.blueprint.region.Region.Companion.iterateBoxBlockPositions
-import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.mcbrawls.blueprint.region.serialization.SerializableRegionTypes
+import net.mcbrawls.blueprint.serialization.SerializableRegion
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box

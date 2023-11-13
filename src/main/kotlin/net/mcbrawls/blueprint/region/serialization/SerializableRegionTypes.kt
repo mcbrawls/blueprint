@@ -2,9 +2,11 @@ package net.mcbrawls.blueprint.region.serialization
 
 import com.mojang.serialization.Lifecycle
 import net.mcbrawls.blueprint.BlueprintMod
+import net.mcbrawls.blueprint.CompoundRegion
 import net.mcbrawls.blueprint.region.CuboidRegion
 import net.mcbrawls.blueprint.region.PointRegion
 import net.mcbrawls.blueprint.region.SphericalRegion
+import net.mcbrawls.blueprint.serialization.SerializableRegion
 import net.minecraft.registry.Registry
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.SimpleRegistry
@@ -38,6 +40,7 @@ object SerializableRegionTypes {
      * A region defined by a sphere.
      */
     val SPHERE = register("sphere", SerializableRegion.Type(SphericalRegion.CODEC))
+    val COMPOUND = register("compound", SerializableRegion.Type(CompoundRegion.CODEC))
 
     private fun register(id: String, type: SerializableRegion.Type): SerializableRegion.Type {
         return Registry.register(REGISTRY, Identifier(BlueprintMod.MOD_ID, id), type)

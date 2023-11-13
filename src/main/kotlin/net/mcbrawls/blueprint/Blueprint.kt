@@ -2,7 +2,7 @@ package net.mcbrawls.blueprint
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
-import net.mcbrawls.blueprint.region.serialization.SerializableRegion
+import net.mcbrawls.blueprint.serialization.SerializableRegion
 import net.minecraft.block.BlockState
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
