@@ -22,16 +22,11 @@ repositories {
     }
 }
 
-loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        mod_id {
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
+sourceSets {
+    test {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
     }
-
 }
 
 dependencies {
@@ -45,6 +40,25 @@ dependencies {
     include modImplementation ("dev.andante:bubble:$bubble_version")
     include modImplementation ("dev.andante:audience:$audience_version")
     include modImplementation ("dev.andante:codex:$codex_version")
+
+    modImplementation "com.ptsmods:devlogin:$devlogin_version"
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        mod_id {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+
+    runs {
+        client {
+            programArg("--msa")
+        }
+    }
 }
 
 processResources {
