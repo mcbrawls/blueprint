@@ -27,6 +27,6 @@ abstract class SerializableRegion(
          * The codec for a serializable region, defined by its type.
          */
         val CODEC: Codec<SerializableRegion> = SerializableRegionTypes.REGISTRY.getCodec()
-            .dispatch("type", SerializableRegion::type, Type::codec)
+            .dispatch(SerializableRegion::type, Type::codec)
     }
 }
