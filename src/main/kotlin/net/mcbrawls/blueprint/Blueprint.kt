@@ -6,9 +6,6 @@ import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.minecraft.block.BlockState
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
 
 /**
  * Represents a structure blueprint.
@@ -27,7 +24,7 @@ data class Blueprint(
     /**
      * The regions stored within this blueprint.
      */
-    val regions: List<SerializableRegion>,
+    val regions: Map<String, SerializableRegion>
 ) {
     /**
      * A list of the positions to their actual block states.
@@ -57,46 +54,11 @@ data class Blueprint(
                 PalettedState.CODEC.listOf()
                     .fieldOf("block_states")
                     .forGetter(Blueprint::palettedBlockStates),
-                SerializableRegion.CODEC.listOf()
-                    .fieldOf("regions")
-                    .forGetter(Blueprint::regions),
+                Codec.unboundedMap(
+                    Codec.STRING,
+                    SerializableRegion.CODEC
+                ).fieldOf("regions").forGetter(Blueprint::regions)
             ).apply(instance, ::Blueprint)
-        }
-
-        /**
-         * Creates a blueprint from block states in the world.
-         */
-        fun create(world: World, corner1: BlockPos, corner2: BlockPos): Blueprint {
-            val palette: MutableList<BlockState> = mutableListOf()
-            val palettedBlockStates: MutableList<PalettedState> = mutableListOf()
-
-            val (min, max) = corner1.compared(corner2)
-            BlockPos.iterate(min, max).forEach { pos ->
-                // filter out air
-                val state = world.getBlockState(pos)
-                if (state.isAir) {
-                    return@forEach
-                }
-
-                // add to palette if not present already
-                if (!palette.contains(state)) {
-                    palette.add(state)
-                }
-
-                // add to paletted block states
-                val relativePos = pos.subtract(min)
-                val paletteId = palette.indexOf(state)
-                palettedBlockStates.add(PalettedState(relativePos, paletteId))
-            }
-
-            return Blueprint(palette, palettedBlockStates, listOf())
-        }
-
-        private fun BlockPos.compared(other: BlockPos): Pair<BlockPos, BlockPos> {
-            val box = Box(Vec3d.of(this), Vec3d.of(other))
-            val min = BlockPos.ofFloored(box.minX, box.minY, box.minZ)
-            val max = BlockPos.ofFloored(box.maxX, box.maxY, box.maxZ)
-            return min to max
         }
     }
 }
