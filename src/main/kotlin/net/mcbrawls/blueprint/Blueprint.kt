@@ -2,6 +2,7 @@ package net.mcbrawls.blueprint
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
+import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.minecraft.block.BlockState
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
@@ -22,6 +23,11 @@ data class Blueprint(
      * The block states stored as their palette ids.
      */
     val palettedBlockStates: List<PalettedState>,
+
+    /**
+     * The regions stored within this blueprint.
+     */
+    val regions: List<SerializableRegion>,
 ) {
     /**
      * A list of the positions to their actual block states.
@@ -51,6 +57,9 @@ data class Blueprint(
                 PalettedState.CODEC.listOf()
                     .fieldOf("block_states")
                     .forGetter(Blueprint::palettedBlockStates),
+                SerializableRegion.CODEC.listOf()
+                    .fieldOf("regions")
+                    .forGetter(Blueprint::regions),
             ).apply(instance, ::Blueprint)
         }
 
@@ -80,7 +89,7 @@ data class Blueprint(
                 palettedBlockStates.add(PalettedState(relativePos, paletteId))
             }
 
-            return Blueprint(palette, palettedBlockStates)
+            return Blueprint(palette, palettedBlockStates, listOf())
         }
 
         private fun BlockPos.compared(other: BlockPos): Pair<BlockPos, BlockPos> {
