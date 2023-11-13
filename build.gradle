@@ -55,7 +55,9 @@ loom {
     }
 
     runs {
-        client {
+        authenticatedClient {
+            client()
+            name("Minecraft Client (Authenticated)")
             programArg("--msa")
         }
     }
