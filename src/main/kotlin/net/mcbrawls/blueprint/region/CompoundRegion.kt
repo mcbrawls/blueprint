@@ -2,6 +2,7 @@ package net.mcbrawls.blueprint.region
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
+import net.mcbrawls.blueprint.Blueprint
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.BlockPos
@@ -16,8 +17,6 @@ data class CompoundRegion(
      */
     val regions: List<SerializableRegion>
 ) : Region {
-    constructor(vararg regions: SerializableRegion) : this(regions.toList())
-
     override val positions: Set<BlockPos> = regions.flatMap(SerializableRegion::positions).toSet()
 
     override fun contains(entity: Entity): Boolean {
@@ -34,6 +33,15 @@ data class CompoundRegion(
                     .fieldOf("regions")
                     .forGetter(CompoundRegion::regions)
             ).apply(instance, ::CompoundRegion)
+        }
+
+        /**
+         * Creates a compound region from the given regions of a blueprint.
+         * @return a compound region
+         */
+        fun of(blueprint: Blueprint, vararg keys: String): CompoundRegion {
+            val regions = keys.mapNotNull(blueprint.regions::get)
+            return CompoundRegion(regions)
         }
     }
 }
