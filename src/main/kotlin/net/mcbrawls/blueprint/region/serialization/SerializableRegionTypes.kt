@@ -11,22 +11,35 @@ import net.minecraft.registry.SimpleRegistry
 import net.minecraft.util.Identifier
 
 object SerializableRegionTypes {
+    val REGISTRY_ID = Identifier(BlueprintMod.MOD_ID, "serializable_region_types")
+
     /**
      * The registry key for serializable region types.
      */
-    val REGISTRY_KEY: RegistryKey<Registry<SerializableRegionType>> =
-        RegistryKey.ofRegistry(Identifier(BlueprintMod.MOD_ID, "serializable_region_types"))
+    val REGISTRY_KEY: RegistryKey<Registry<SerializableRegion.Type>> = RegistryKey.ofRegistry(REGISTRY_ID)
 
     /**
      * The registry of serializable region types.
      */
-    val REGISTRY: Registry<SerializableRegionType> = SimpleRegistry(REGISTRY_KEY, Lifecycle.stable())
+    val REGISTRY: Registry<SerializableRegion.Type> = SimpleRegistry(REGISTRY_KEY, Lifecycle.stable())
 
-    val POINT = register("point", SerializableRegionType(PointRegion.CODEC))
-    val CUBOID = register("cuboid", SerializableRegionType(CuboidRegion.CODEC))
-    val SPHERE = register("sphere", SerializableRegionType(SphericalRegion.CODEC))
+    /**
+     * A region defined by a single point in the world.
+     * Useful for cases such as respawn or chest positions.
+     */
+    val POINT = register("point", SerializableRegion.Type(PointRegion.CODEC))
 
-    private fun register(id: String, type: SerializableRegionType): SerializableRegionType {
+    /**
+     * A region defined by a cuboid.
+     */
+    val CUBOID = register("cuboid", SerializableRegion.Type(CuboidRegion.CODEC))
+
+    /**
+     * A region defined by a sphere.
+     */
+    val SPHERE = register("sphere", SerializableRegion.Type(SphericalRegion.CODEC))
+
+    private fun register(id: String, type: SerializableRegion.Type): SerializableRegion.Type {
         return Registry.register(REGISTRY, Identifier(BlueprintMod.MOD_ID, id), type)
     }
 }

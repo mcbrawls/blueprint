@@ -10,13 +10,23 @@ abstract class SerializableRegion(
     /**
      * The serialized type of this region.
      */
-    val type: SerializableRegionType
+    val type: Type
 ) : Region {
+    /**
+     * A type of serializable region.
+     */
+    data class Type(
+        /**
+         * The codec of this serializable region type.
+         */
+        val codec: Codec<out SerializableRegion>
+    )
+
     companion object {
         /**
          * The codec for a serializable region, defined by its type.
          */
         val CODEC: Codec<SerializableRegion> = SerializableRegionTypes.REGISTRY.getCodec()
-            .dispatch("type", SerializableRegion::type, SerializableRegionType::codec)
+            .dispatch("type", SerializableRegion::type, Type::codec)
     }
 }
