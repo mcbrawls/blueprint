@@ -1,4 +1,4 @@
-package net.mcbrawls.blueprint
+package net.mcbrawls.blueprint.structure
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder

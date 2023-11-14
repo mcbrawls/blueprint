@@ -4,8 +4,8 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import dev.andante.codex.SetCodec.Companion.setOf
 import dev.andante.codex.nullableFieldOf
-import net.mcbrawls.blueprint.Blueprint
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
+import net.mcbrawls.blueprint.structure.Blueprint
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
