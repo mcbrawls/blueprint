@@ -2,10 +2,13 @@ package net.mcbrawls.blueprint.region
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
+import dev.andante.codex.SetCodec.Companion.setOf
+import dev.andante.codex.nullableFieldOf
 import net.mcbrawls.blueprint.Blueprint
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 
 /**
  * A region defined of multiple other regions.
@@ -15,12 +18,38 @@ data class CompoundRegion(
     /**
      * The regions which compose this compound region.
      */
-    val regions: List<SerializableRegion>
-) : Region {
-    override val positions: Set<BlockPos> = regions.flatMap(SerializableRegion::positions).toSet()
+    val regions: Set<SerializableRegion>,
 
-    override fun contains(entity: Entity): Boolean {
-        return regions.any { region -> region.contains(entity) }
+    /**
+     * The global offset for this compound region.
+     */
+    val globalOffset: Vec3d? = null
+) : Region {
+    /**
+     * A secondary vararg constructor.
+     */
+    constructor(
+        vararg regions: SerializableRegion,
+        globalOffset: Vec3d? = null
+    ) : this(regions.toSet(), globalOffset)
+
+    fun getAbsoluteOffset(offset: Vec3d): Vec3d {
+        return if (globalOffset != null) {
+            offset.add(globalOffset)
+        } else {
+            offset
+        }
+    }
+
+    override fun getBlockPositions(offset: Vec3d): Set<BlockPos> {
+        val absoluteOffset = getAbsoluteOffset(offset)
+        val mapped = regions.flatMap { region -> region.getBlockPositions(absoluteOffset) }
+        return mapped.toSet()
+    }
+
+    override fun contains(entity: Entity, offset: Vec3d): Boolean {
+        val absoluteOffset = getAbsoluteOffset(offset)
+        return regions.any { region -> region.contains(entity, absoluteOffset) }
     }
 
     companion object {
@@ -29,9 +58,12 @@ data class CompoundRegion(
          */
         val CODEC: Codec<CompoundRegion> = RecordCodecBuilder.create { instance ->
             instance.group(
-                SerializableRegion.CODEC.listOf()
+                SerializableRegion.CODEC.setOf()
                     .fieldOf("regions")
-                    .forGetter(CompoundRegion::regions)
+                    .forGetter(CompoundRegion::regions),
+                Vec3d.CODEC
+                    .nullableFieldOf("offset")
+                    .forGetter(CompoundRegion::globalOffset)
             ).apply(instance, ::CompoundRegion)
         }
 
@@ -41,7 +73,7 @@ data class CompoundRegion(
          */
         fun of(blueprint: Blueprint, vararg keys: String): CompoundRegion {
             val regions = keys.mapNotNull(blueprint.regions::get)
-            return CompoundRegion(regions)
+            return CompoundRegion(regions.toSet())
         }
     }
 }

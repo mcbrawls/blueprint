@@ -26,27 +26,27 @@ data class SphericalRegion(
      */
     val radius: Double
 ) : SerializableRegion(SerializableRegionTypes.SPHERE) {
-    override val positions: Set<BlockPos> = computePositions()
-
-    override fun contains(entity: Entity): Boolean {
-        return entity.squaredDistanceTo(rootPosition) <= radius
+    private fun isPositionWithinRadius(offset: Vec3d): (BlockPos) -> Boolean {
+        val absolutePosition = rootPosition.add(offset)
+        return { position -> position.getSquaredDistance(absolutePosition) <= radius }
     }
 
     /**
      * Calculates all positions for this spherical region.
      */
-    private fun computePositions(): Set<BlockPos> {
+    override fun getBlockPositions(offset: Vec3d): Set<BlockPos> {
         // create box
         val diameter = radius * 2
-        val box = Box.of(rootPosition, diameter, diameter, diameter)
+        val box = Box.of(rootPosition.add(offset), diameter, diameter, diameter)
 
         // iterate through all positions and find all that are within range for a sphere
         val boxPositions = iterateBoxBlockPositions(box)
-        return boxPositions.filter(::isPositionWithinRadius).toSet()
+        val predicate = isPositionWithinRadius(offset)
+        return boxPositions.filter(predicate).toSet()
     }
 
-    private fun isPositionWithinRadius(position: BlockPos): Boolean {
-        return position.getSquaredDistance(rootPosition) <= radius
+    override fun contains(entity: Entity, offset: Vec3d): Boolean {
+        return entity.squaredDistanceTo(rootPosition.add(offset)) <= radius
     }
 
     companion object {

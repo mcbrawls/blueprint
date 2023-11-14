@@ -25,26 +25,14 @@ data class CuboidRegion(
     val size: Vec3d
 ) : SerializableRegion(SerializableRegionTypes.CUBOID) {
     /**
-     * The cached box of this cuboid region.
-     */
-    private val box: Box = createBox()
-
-    override val positions: Set<BlockPos> = computePositions()
-
-    /**
-     * A predicate to check if an entity is within the cuboid bounding box.
-     */
-    override fun contains(entity: Entity): Boolean {
-        return entity.boundingBox.intersects(box)
-    }
-
-    /**
      * Creates a box of this cuboid region.
      */
-    private fun createBox(): Box {
-        val rootBox = Box.from(rootPosition)
+    fun createBox(offset: Vec3d = Vec3d.ZERO): Box {
+        val offsetPosition = rootPosition.add(offset)
 
-        val endPosition = rootPosition.add(size)
+        val rootBox = Box.from(offsetPosition)
+
+        val endPosition = offsetPosition.add(size)
         val endBox = Box.from(endPosition)
 
         return rootBox.intersection(endBox)
@@ -53,8 +41,17 @@ data class CuboidRegion(
     /**
      * Calculates all positions for this cuboid region.
      */
-    private fun computePositions(): Set<BlockPos> {
+    override fun getBlockPositions(offset: Vec3d): Set<BlockPos> {
+        val box = createBox(offset)
         return iterateBoxBlockPositions(box).toSet()
+    }
+
+    /**
+     * A predicate to check if an entity is within the cuboid bounding box.
+     */
+    override fun contains(entity: Entity, offset: Vec3d): Boolean {
+        val box = createBox(offset)
+        return entity.boundingBox.intersects(box)
     }
 
     companion object {
