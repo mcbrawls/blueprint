@@ -7,7 +7,7 @@ object BlueprintMod : ModInitializer {
     const val MOD_ID = "blueprint"
     const val MOD_NAME = "Blueprint"
 
-    private val logger = LoggerFactory.getLogger(MOD_NAME)
+    val logger = LoggerFactory.getLogger(MOD_NAME)
 
 	override fun onInitialize() {
 		logger.info("Initializing $MOD_NAME")

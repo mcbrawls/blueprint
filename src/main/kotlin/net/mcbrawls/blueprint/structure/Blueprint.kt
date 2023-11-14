@@ -6,6 +6,7 @@ import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.minecraft.block.BlockState
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 
 /**
  * Represents a structure blueprint.
@@ -17,9 +18,14 @@ data class Blueprint(
     val palette: List<BlockState>,
 
     /**
-     * The block states stored as their palette ids.
+     * A list of paletted states, mapping palette indexes to their positions.
      */
     val palettedBlockStates: List<PalettedState>,
+
+    /**
+     * The size of the blueprint.
+     */
+    val size: Vec3d,
 
     /**
      * The regions stored within this blueprint.
@@ -29,17 +35,19 @@ data class Blueprint(
     /**
      * A list of the positions to their actual block states.
      */
-    private val blockStates: Map<BlockPos, BlockState> = palettedBlockStates.associate { it.blockPos to palette[it.paletteIndex] }
+    private val blockStates: Map<BlockPos, BlockState> = palettedBlockStates
+        .associate { palettedState -> palettedState.blockPos to palette[palettedState.paletteIndex] }
 
     /**
      * Places this blueprint in the world at the given position.
+     * @return a placed blueprint
      */
-    fun place(world: ServerWorld, pos: BlockPos): Int {
+    fun place(world: ServerWorld, position: BlockPos): PlacedBlueprint {
         blockStates.forEach { (offset, state) ->
-            world.setBlockState(pos.add(offset), state)
+            world.setBlockState(position.add(offset), state)
         }
 
-        return blockStates.size
+        return PlacedBlueprint(this, position)
     }
 
     companion object {
@@ -54,6 +62,9 @@ data class Blueprint(
                 PalettedState.CODEC.listOf()
                     .fieldOf("block_states")
                     .forGetter(Blueprint::palettedBlockStates),
+                Vec3d.CODEC
+                    .fieldOf("size")
+                    .forGetter(Blueprint::size),
                 Codec.unboundedMap(
                     Codec.STRING,
                     SerializableRegion.CODEC

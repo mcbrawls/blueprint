@@ -19,7 +19,7 @@ abstract class SerializableRegion(
      * @return a compound region
      */
     fun withOffset(offset: Vec3d): CompoundRegion {
-        return CompoundRegion(this, globalOffset = offset)
+        return CompoundRegion.ofRegionsOffset(offset, this)
     }
 
     /**

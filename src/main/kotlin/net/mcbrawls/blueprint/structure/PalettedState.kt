@@ -5,22 +5,26 @@ import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.minecraft.util.math.BlockPos
 
 /**
- * A paletted block state.
+ * The placement of a palette block state within a blueprint.
  */
 data class PalettedState(
     /**
-     * The offset position.
+     * The offset position from the root of the blueprint placement.
      */
     val blockPos: BlockPos,
 
     /**
-     * The index of the block state in the palette.
+     * The index of the block state in the blueprint's palette.
      */
     val paletteIndex: Int
 ) {
+    override fun toString(): String {
+        return "PalettedState[#$paletteIndex, $blockPos]"
+    }
+
     companion object {
         /**
-         * The codec of this class.
+         * The codec of a paletted state.
          */
         val CODEC: Codec<PalettedState> = RecordCodecBuilder.create { instance ->
             instance.group(

@@ -5,7 +5,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder
 import dev.andante.codex.SetCodec.Companion.setOf
 import dev.andante.codex.nullableFieldOf
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
-import net.mcbrawls.blueprint.structure.Blueprint
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
@@ -25,14 +24,6 @@ data class CompoundRegion(
      */
     val globalOffset: Vec3d? = null
 ) : Region {
-    /**
-     * A secondary vararg constructor.
-     */
-    constructor(
-        vararg regions: SerializableRegion,
-        globalOffset: Vec3d? = null
-    ) : this(regions.toSet(), globalOffset)
-
     private fun getAbsoluteOffset(offset: Vec3d): Vec3d {
         return if (globalOffset != null) {
             offset.add(globalOffset)
@@ -68,12 +59,19 @@ data class CompoundRegion(
         }
 
         /**
-         * Creates a compound region from the given regions of a blueprint.
+         * Creates a compound region from the given regions.
          * @return a compound region
          */
-        fun of(blueprint: Blueprint, vararg keys: String): CompoundRegion {
-            val regions = keys.mapNotNull(blueprint.regions::get)
+        fun ofRegions(vararg regions: SerializableRegion): CompoundRegion {
             return CompoundRegion(regions.toSet())
+        }
+
+        /**
+         * Creates a compound region from the given regions with an offset.
+         * @return a compound region
+         */
+        fun ofRegionsOffset(offset: Vec3d, vararg regions: SerializableRegion): CompoundRegion {
+            return CompoundRegion(regions.toSet(), offset)
         }
     }
 }
