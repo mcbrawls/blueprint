@@ -1,6 +1,11 @@
 package net.mcbrawls.blueprint
 
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import net.mcbrawls.blueprint.command.BlueprintCommand
+import net.mcbrawls.blueprint.network.BlueprintConfigC2SPacket
+import net.mcbrawls.blueprint.player.BlueprintPlayerData.Companion.blueprintData
 import org.slf4j.LoggerFactory
 
 object BlueprintMod : ModInitializer {
@@ -9,7 +14,33 @@ object BlueprintMod : ModInitializer {
 
     val logger = LoggerFactory.getLogger(MOD_NAME)
 
-	override fun onInitialize() {
-		logger.info("Initializing $MOD_NAME")
-	}
+    private var isPlayerDataSavingEnabled = false
+
+    override fun onInitialize() {
+        logger.info("Initializing $MOD_NAME")
+
+        // register config packet receiver
+        ServerPlayNetworking.registerGlobalReceiver(BlueprintConfigC2SPacket.TYPE) { packet, player, _ ->
+            player.blueprintData = packet.createBlueprintPlayerData()
+        }
+
+        // register commands
+        CommandRegistrationCallback.EVENT.register { dispatcher, _, environment ->
+            BlueprintCommand.register(dispatcher, environment)
+        }
+    }
+
+    /**
+     * Enables whether blueprint data, such as user configuration, is saved to the player's data file.
+     */
+    fun enablePlayerDataSaving() {
+        isPlayerDataSavingEnabled = true
+    }
+
+    /**
+     * Whether blueprint data is saved to players' data files.
+     */
+    fun isPlayerDataSavingEnabled(): Boolean {
+        return isPlayerDataSavingEnabled
+    }
 }
