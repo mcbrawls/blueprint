@@ -20,6 +20,11 @@ repositories {
         name = "Andante"
         url  = "https://maven.andante.dev/releases/"
     }
+
+    maven {
+        name = "Nucleoid"
+        url  = "https://maven.nucleoid.xyz/"
+    }
 }
 
 sourceSets {
@@ -40,6 +45,8 @@ dependencies {
     include modImplementation ("dev.andante:bubble:$bubble_version")
     include modImplementation ("dev.andante:audience:$audience_version")
     include modImplementation ("dev.andante:codex:$codex_version")
+
+    include modImplementation ("eu.pb4:sgui:$sgui_version")
 
     modImplementation "com.ptsmods:devlogin:$devlogin_version"
 }
