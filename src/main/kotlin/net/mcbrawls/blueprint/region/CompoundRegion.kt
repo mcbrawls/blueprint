@@ -33,7 +33,7 @@ data class CompoundRegion(
         globalOffset: Vec3d? = null
     ) : this(regions.toSet(), globalOffset)
 
-    fun getAbsoluteOffset(offset: Vec3d): Vec3d {
+    private fun getAbsoluteOffset(offset: Vec3d): Vec3d {
         return if (globalOffset != null) {
             offset.add(globalOffset)
         } else {
