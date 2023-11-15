@@ -65,11 +65,15 @@ data class Blueprint(
                 Vec3d.CODEC
                     .fieldOf("size")
                     .forGetter(Blueprint::size),
-                Codec.unboundedMap(
-                    Codec.STRING,
-                    SerializableRegion.CODEC
-                ).fieldOf("regions").forGetter(Blueprint::regions)
+                Codec.unboundedMap(Codec.STRING, SerializableRegion.CODEC)
+                    .fieldOf("regions")
+                    .forGetter(Blueprint::regions)
             ).apply(instance, ::Blueprint)
         }
+
+        /**
+         * An entirely empty blueprint.
+         */
+        val EMPTY = Blueprint(emptyList(), emptyList(), Vec3d.ZERO, emptyMap())
     }
 }

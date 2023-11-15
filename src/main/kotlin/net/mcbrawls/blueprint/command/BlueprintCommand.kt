@@ -20,6 +20,10 @@ object BlueprintCommand {
 
         //
 
+        if (environment.dedicated) {
+            // blueprint environment
+        }
+
         dispatcher.register(builder)
     }
 

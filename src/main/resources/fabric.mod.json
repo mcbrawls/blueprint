@@ -36,10 +36,12 @@
 			"environment": "client"
 		}
 	],
-    "loom:injected_interfaces": {
-        "net/minecraft/class_3222": [
-            "net/mcbrawls/blueprint/player/BlueprintPlayerAccessor"
-        ]
+    "custom": {
+        "loom:injected_interfaces": {
+            "net/minecraft/class_3222": [
+                "net/mcbrawls/blueprint/player/BlueprintPlayerAccessor"
+            ]
+        }
     },
 	"depends": {
 		"minecraft": "~1.20.2",

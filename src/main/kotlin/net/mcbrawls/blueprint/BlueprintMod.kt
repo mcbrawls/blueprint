@@ -3,9 +3,12 @@ package net.mcbrawls.blueprint
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper
 import net.mcbrawls.blueprint.command.BlueprintCommand
 import net.mcbrawls.blueprint.network.BlueprintConfigC2SPacket
 import net.mcbrawls.blueprint.player.BlueprintPlayerData.Companion.blueprintData
+import net.mcbrawls.blueprint.resource.BlueprintManager
+import net.minecraft.resource.ResourceType
 import org.slf4j.LoggerFactory
 
 object BlueprintMod : ModInitializer {
@@ -28,6 +31,9 @@ object BlueprintMod : ModInitializer {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, environment ->
             BlueprintCommand.register(dispatcher, environment)
         }
+
+        // register resource listener
+        ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(BlueprintManager)
     }
 
     /**
