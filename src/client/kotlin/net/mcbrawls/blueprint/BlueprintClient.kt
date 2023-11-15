@@ -2,7 +2,7 @@ package net.mcbrawls.blueprint
 
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.mcbrawls.blueprint.network.BlueprintConfigC2SPacket
 
 object BlueprintClient : ClientModInitializer {
@@ -13,7 +13,7 @@ object BlueprintClient : ClientModInitializer {
                 renderParticles = false
             )
 
-            handler.sendPacket(ServerPlayNetworking.createS2CPacket(packet))
+            handler.sendPacket(ClientPlayNetworking.createC2SPacket(packet))
         }
     }
 }
