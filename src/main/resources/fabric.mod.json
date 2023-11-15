@@ -51,6 +51,7 @@
         "bubble": "*",
         "audience": "*",
         "codex": "*",
-        "sgui": "*"
+        "sgui": "*",
+        "brawls-sgui": "*"
 	}
 }

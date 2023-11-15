@@ -1,5 +1,7 @@
 package net.mcbrawls.blueprint.resource
 
+import com.mojang.brigadier.suggestion.Suggestions
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.fabricmc.fabric.api.resource.SimpleResourceReloadListener
 import net.mcbrawls.blueprint.BlueprintMod
 import net.mcbrawls.blueprint.structure.Blueprint
@@ -31,6 +33,23 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
      * The blueprints currently loaded in the game instance.
      */
     private val blueprints: MutableMap<Identifier, Blueprint> = mutableMapOf()
+
+    /**
+     * Gets the blueprint with the given id.
+     * @return an optional blueprint
+     */
+    operator fun get(id: Identifier): Blueprint? {
+        return blueprints[id]
+    }
+
+    /**
+     * Suggests all loaded blueprints to the suggestions builder.
+     * @return a suggestions future
+     */
+    fun suggestBlueprints(builder: SuggestionsBuilder): CompletableFuture<Suggestions> {
+        blueprints.keys.map(Identifier::toString).forEach(builder::suggest)
+        return builder.buildFuture()
+    }
 
     override fun load(
         manager: ResourceManager,

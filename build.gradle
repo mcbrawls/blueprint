@@ -60,6 +60,7 @@ dependencies {
     include modImplementation ("dev.andante:codex:$codex_version")
 
     include modImplementation ("eu.pb4:sgui:$sgui_version")
+    include modImplementation ("net.mcbrawls:brawls-sgui:$brawls_sgui_version")
 
     modImplementation "com.ptsmods:devlogin:$devlogin_version"
 
