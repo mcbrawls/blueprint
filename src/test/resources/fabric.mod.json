@@ -1,0 +1,14 @@
+{
+    "schemaVersion": 1,
+    "id": "blueprint-test",
+    "version": "1.0",
+    "environment": "*",
+    "entrypoints": {
+        "main": [
+            {
+                "value": "net.mcbrawls.blueprint.test.BlueprintTest",
+                "adapter": "kotlin"
+            }
+        ]
+    }
+}

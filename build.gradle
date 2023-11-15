@@ -27,6 +27,26 @@ repositories {
     }
 }
 
+loom.splitEnvironmentSourceSets()
+
+sourceSets {
+    test {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
+
+    testClient {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+
+        compileClasspath += client.compileClasspath
+        runtimeClasspath += client.runtimeClasspath
+
+        compileClasspath += test.compileClasspath
+        runtimeClasspath += test.runtimeClasspath
+    }
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:$minecraft_version"
     mappings "net.fabricmc:yarn:$minecraft_version+build.$yarn_build:v2"
@@ -42,10 +62,17 @@ dependencies {
     include modImplementation ("eu.pb4:sgui:$sgui_version")
 
     modImplementation "com.ptsmods:devlogin:$devlogin_version"
+
+    // test
+    testImplementation sourceSets.main.output
+
+    testClientImplementation sourceSets.main.output
+    testClientImplementation sourceSets.client.output
+    testClientImplementation sourceSets.test.output
 }
 
 loom {
-    splitEnvironmentSourceSets()
+    runtimeOnlyLog4j = true
 
     mods {
         mod_id {
@@ -59,6 +86,27 @@ loom {
             client()
             name("Minecraft Client (Authenticated)")
             programArg("--msa")
+        }
+
+        testClient {
+            client()
+            name("Minecraft Client (Test)")
+            source(sourceSets.testClient)
+            runDir("runtest")
+        }
+
+        testClientAuthenticated {
+            inherit(testClient)
+            name("Minecraft Client (Test Authenticated)")
+            programArg("--msa")
+            runDir("runtest")
+        }
+
+        testServer {
+            server()
+            name("Minecraft Server (Test)")
+            source(sourceSets.test)
+            runDir("runtest")
         }
     }
 }
