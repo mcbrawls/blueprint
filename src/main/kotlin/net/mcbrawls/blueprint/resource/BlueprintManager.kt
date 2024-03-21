@@ -79,7 +79,8 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
                     val optionalResult = blueprintDataResult.resultOrPartial(LOGGER::error)
 
                     // put blueprint if present
-                    optionalResult.ifPresent { result -> this[location] = result.first }
+                    val loadedLocation = FINDER.toResourceId(location)
+                    optionalResult.ifPresent { result -> this[loadedLocation] = result.first }
                 }
             }
         }

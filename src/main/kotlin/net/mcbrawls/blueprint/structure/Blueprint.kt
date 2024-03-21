@@ -7,6 +7,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
+import java.util.function.BiConsumer
 
 /**
  * Represents a structure blueprint.
@@ -33,21 +34,25 @@ data class Blueprint(
     val regions: Map<String, SerializableRegion>
 ) {
     /**
-     * A list of the positions to their actual block states.
-     */
-    private val blockStates: Map<BlockPos, BlockState> = palettedBlockStates
-        .associate { palettedState -> palettedState.blockPos to palette[palettedState.paletteIndex] }
-
-    /**
      * Places this blueprint in the world at the given position.
      * @return a placed blueprint
      */
     fun place(world: ServerWorld, position: BlockPos): PlacedBlueprint {
-        blockStates.forEach { (offset, state) ->
+        forEach { offset, state ->
             world.setBlockState(position.add(offset), state)
         }
 
         return PlacedBlueprint(this, position)
+    }
+
+    /**
+     * Performs the given action for every position in the blueprint.
+     */
+    fun forEach(action: BiConsumer<BlockPos, BlockState>) {
+        palettedBlockStates.forEach { (offset, index) ->
+            val state = palette[index]
+            action.accept(offset, state)
+        }
     }
 
     companion object {

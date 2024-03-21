@@ -10,6 +10,9 @@ import net.mcbrawls.blueprint.network.BlueprintConfigC2SPacket
 import net.mcbrawls.blueprint.player.BlueprintPlayerData.Companion.blueprintData
 import net.mcbrawls.blueprint.resource.BlueprintManager
 import net.minecraft.resource.ResourceType
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 import org.slf4j.LoggerFactory
 
 object BlueprintMod : ModInitializer {
@@ -55,5 +58,16 @@ object BlueprintMod : ModInitializer {
      */
     fun isPlayerDataSavingEnabled(): Boolean {
         return isPlayerDataSavingEnabled
+    }
+}
+
+/**
+ * Compares this block position with another and returns an ordered pair.
+ */
+fun BlockPos.compared(other: BlockPos): Pair<BlockPos, BlockPos> {
+    return if (this <= other) {
+        this to other
+    } else {
+        other to this
     }
 }
