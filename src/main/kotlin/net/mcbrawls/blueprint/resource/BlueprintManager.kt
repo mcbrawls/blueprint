@@ -7,6 +7,7 @@ import net.mcbrawls.blueprint.BlueprintMod
 import net.mcbrawls.blueprint.structure.Blueprint
 import net.minecraft.nbt.NbtIo
 import net.minecraft.nbt.NbtOps
+import net.minecraft.nbt.NbtSizeTracker
 import net.minecraft.resource.Resource
 import net.minecraft.resource.ResourceFinder
 import net.minecraft.resource.ResourceManager
@@ -65,7 +66,7 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
                 resources.forEach { (location, resource) ->
                     // read raw blueprint nbt data
                     val blueprintNbt = try {
-                        resource.inputStream.use(NbtIo::readCompressed)
+                        resource.inputStream.use { NbtIo.readCompressed(it, NbtSizeTracker.ofUnlimitedBytes()) }
                     } catch (exception: Exception) {
                         LOGGER.error("Could not load blueprint: $location", exception)
                         return@forEach

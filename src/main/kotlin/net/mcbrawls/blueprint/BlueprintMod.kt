@@ -30,7 +30,7 @@ object BlueprintMod : ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(BlueprintConfigC2SPacket.TYPE) { packet, player, _ ->
             player.blueprintData = packet.createBlueprintPlayerData()
 
-            val playerName = player.entityName
+            val playerName = player.gameProfile.name
             logger.info("Received blueprint config from player: $playerName")
         }
 

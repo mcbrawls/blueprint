@@ -1,7 +1,7 @@
 //file:noinspection All
 
 plugins {
-    id "fabric-loom" version "1.4-SNAPSHOT"
+    id "fabric-loom" version "1.6-SNAPSHOT"
     id "org.jetbrains.kotlin.jvm"
     id "maven-publish"
 }
