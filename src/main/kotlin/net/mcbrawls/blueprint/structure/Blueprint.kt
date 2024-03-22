@@ -34,6 +34,11 @@ data class Blueprint(
     val regions: Map<String, SerializableRegion>
 ) {
     /**
+     * The centre of this blueprint.
+     */
+    val center: Vec3i = Vec3i(size.x / 2, size.y / 2, size.z / 2)
+
+    /**
      * Places this blueprint in the world at the given position.
      * @return a placed blueprint
      */

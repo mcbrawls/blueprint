@@ -29,6 +29,11 @@ data class PlacedBlueprint(
     val offset: Vec3d = Vec3d.of(position)
 
     /**
+     * The centre of the placed blueprint.
+     */
+    val center: BlockPos = position.add(blueprint.center)
+
+    /**
      * All positions of this blueprint.
      */
     val positions: Set<BlockPos> by lazy {
