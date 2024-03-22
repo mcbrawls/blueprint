@@ -55,12 +55,12 @@ object BlueprintCommand {
                 .then(
                     literal("save")
                         .then(
-                            argument(BLUEPRINT_KEY, IdentifierArgumentType.identifier())
-                                .suggests { _, suggestions -> BlueprintManager.suggestBlueprints(suggestions) }
+                            argument(START_POSITION_KEY, BlockPosArgumentType.blockPos())
                                 .then(
-                                    argument(START_POSITION_KEY, BlockPosArgumentType.blockPos())
+                                    argument(END_POSITION_KEY, BlockPosArgumentType.blockPos())
                                         .then(
-                                            argument(END_POSITION_KEY, BlockPosArgumentType.blockPos())
+                                            argument(BLUEPRINT_KEY, IdentifierArgumentType.identifier())
+                                                .suggests { _, suggestions -> BlueprintManager.suggestBlueprints(suggestions) }
                                                 .executes(::executeSave)
                                         )
                                 )
@@ -69,10 +69,10 @@ object BlueprintCommand {
                 .then(
                     literal("place")
                         .then(
-                            argument(BLUEPRINT_KEY, IdentifierArgumentType.identifier())
-                                .suggests { _, suggestions -> BlueprintManager.suggestBlueprints(suggestions) }
+                            argument(POSITION_KEY, BlockPosArgumentType.blockPos())
                                 .then(
-                                    argument(POSITION_KEY, BlockPosArgumentType.blockPos())
+                                    argument(BLUEPRINT_KEY, IdentifierArgumentType.identifier())
+                                        .suggests { _, suggestions -> BlueprintManager.suggestBlueprints(suggestions) }
                                         .executes(::executePlace)
                                 )
                         )
