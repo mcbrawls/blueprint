@@ -11,7 +11,7 @@ import net.fabricmc.loader.api.Version
 import net.fabricmc.loader.api.metadata.ModMetadata
 import net.mcbrawls.blueprint.BlueprintMod
 import net.mcbrawls.blueprint.BlueprintMod.MOD_NAME
-import net.mcbrawls.blueprint.compared
+import net.mcbrawls.blueprint.asExtremeties
 import net.mcbrawls.blueprint.editor.BlueprintEditorEnvironment
 import net.mcbrawls.blueprint.editor.BlueprintEditorGui
 import net.mcbrawls.blueprint.editor.BlueprintEditors
@@ -30,10 +30,11 @@ import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.util.math.BlockBox
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
-import net.minecraft.world.gen.feature.PlacedFeatures.isAir
+import net.minecraft.util.math.Vec3i
 import java.nio.file.Path
 
 object BlueprintCommand {
@@ -100,33 +101,59 @@ object BlueprintCommand {
     }
 
     private fun executeSave(context: CommandContext<ServerCommandSource>): Int {
+        val world = context.source.world
+
+        // gather arguments
         val blueprintId = IdentifierArgumentType.getIdentifier(context, BLUEPRINT_KEY)
 
         val inputStartPosition = BlockPosArgumentType.getLoadedBlockPos(context, START_POSITION_KEY)
         val inputEndPosition = BlockPosArgumentType.getLoadedBlockPos(context, END_POSITION_KEY)
 
-        val (startPosition, endPosition) = inputStartPosition.compared(inputEndPosition)
+        // order positions
+        val (min, max) = inputStartPosition.asExtremeties(inputEndPosition)
 
-        val world = context.source.world
-        val posStateMap = BlockPos.iterate(startPosition, endPosition).associateWith(world::getBlockState)
+        // list positions
+        val positions = BlockPos.iterate(min, max)
 
-        val palette = posStateMap.values.toSet().toList()
-        val palettedBlockStates = posStateMap.map { (pos, state) ->
-            val relativePos = pos.subtract(startPosition)
-            PalettedState(relativePos, palette.indexOf(state))
+        // create paletted positions
+        val palette = mutableListOf<BlockState>()
+        val palettedBlockStates = positions.mapNotNull { pos ->
+            val state = world.getBlockState(pos)
+            if (state.isAir) {
+                // disregard air
+                null
+            } else {
+                // build palette
+                if (state !in palette) {
+                    palette.add(state)
+                }
+
+                // create paletted state
+                val relativePos = pos.subtract(min)
+                val paletteId = palette.indexOf(state)
+                PalettedState(relativePos, paletteId)
+            }
         }
 
-        val size = Vec3d.of(endPosition.subtract(startPosition))
-        val blueprint = Blueprint(palette, palettedBlockStates, size, mapOf())
+        // create size
+        val blockBox = BlockBox(min.x, min.y, min.z, max.x, max.y, max.z)
+        val size = Vec3i(blockBox.blockCountX, blockBox.blockCountZ, blockBox.blockCountZ)
 
+        // create blueprint
+        val blueprint = Blueprint(palette, palettedBlockStates, size, mapOf())
         val nbt = Blueprint.CODEC.encodeQuick(NbtOps.INSTANCE, blueprint)
 
+        // save blueprint
         val blueprintNamespace = blueprintId.namespace
         val blueprintPath = blueprintId.path
+
         val pathString = "generated/$blueprintNamespace/blueprints/$blueprintPath.nbt"
         val path = Path.of(pathString)
+
         path.parent.toFile().mkdirs()
         NbtIo.writeCompressed(nbt as NbtCompound, path)
+
+        // feedback
         context.source.sendFeedback({ Text.literal("Saved blueprint to \"$pathString\"") }, true)
 
         return 1

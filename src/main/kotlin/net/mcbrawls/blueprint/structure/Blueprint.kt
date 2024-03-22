@@ -6,7 +6,7 @@ import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.minecraft.block.BlockState
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import java.util.function.BiConsumer
 
 /**
@@ -26,7 +26,7 @@ data class Blueprint(
     /**
      * The size of the blueprint.
      */
-    val size: Vec3d,
+    val size: Vec3i,
 
     /**
      * The regions stored within this blueprint.
@@ -67,7 +67,7 @@ data class Blueprint(
                 PalettedState.CODEC.listOf()
                     .fieldOf("block_states")
                     .forGetter(Blueprint::palettedBlockStates),
-                Vec3d.CODEC
+                Vec3i.CODEC
                     .fieldOf("size")
                     .forGetter(Blueprint::size),
                 Codec.unboundedMap(Codec.STRING, SerializableRegion.CODEC)
@@ -79,6 +79,6 @@ data class Blueprint(
         /**
          * An entirely empty blueprint.
          */
-        val EMPTY = Blueprint(emptyList(), emptyList(), Vec3d.ZERO, emptyMap())
+        val EMPTY = Blueprint(emptyList(), emptyList(), Vec3i.ZERO, emptyMap())
     }
 }

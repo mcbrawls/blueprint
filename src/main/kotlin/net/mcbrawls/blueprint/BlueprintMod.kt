@@ -64,10 +64,9 @@ object BlueprintMod : ModInitializer {
 /**
  * Compares this block position with another and returns an ordered pair.
  */
-fun BlockPos.compared(other: BlockPos): Pair<BlockPos, BlockPos> {
-    return if (this <= other) {
-        this to other
-    } else {
-        other to this
-    }
+fun BlockPos.asExtremeties(other: BlockPos): Pair<BlockPos, BlockPos> {
+    val box = Box(Vec3d.of(this), Vec3d.of(other))
+    val min = BlockPos.ofFloored(box.minX, box.minY, box.minZ)
+    val max = BlockPos.ofFloored(box.maxX, box.maxY, box.maxZ)
+    return min to max
 }
