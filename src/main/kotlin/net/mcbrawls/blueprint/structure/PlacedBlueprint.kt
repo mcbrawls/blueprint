@@ -9,6 +9,7 @@ import net.mcbrawls.blueprint.region.Region
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
+import java.util.function.Consumer
 
 /**
  * A blueprint after it has been placed in the world.
@@ -17,21 +18,40 @@ data class PlacedBlueprint(
     /**
      * The blueprint used in placement.
      */
-    val sourceBlueprint: Blueprint,
+    val blueprint: Blueprint,
 
     /**
      * Where the blueprint was placed in the world.
      */
-    val placedPosition: BlockPos
+    val position: BlockPos
 ) {
-    val offset: Vec3d = Vec3d.of(placedPosition)
+    val offset: Vec3d = Vec3d.of(position)
+
+    /**
+     * All positions of this blueprint.
+     */
+    val positions: Set<BlockPos> by lazy {
+        buildSet {
+            val size = blueprint.size
+            val sizeX = size.x
+            val sizeY = size.y
+            val sizeZ = size.z
+            for (x in 0 until sizeX) {
+                for (y in 0 until sizeY) {
+                    for (z in 0 until sizeZ) {
+                        add(position.add(x, y, z))
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Places the source blueprint again.
      * @return this placed blueprint
      */
     fun place(world: ServerWorld): PlacedBlueprint {
-        sourceBlueprint.place(world, placedPosition)
+        blueprint.place(world, position)
         return this
     }
 
@@ -40,7 +60,7 @@ data class PlacedBlueprint(
      * @return an offset region
      */
     fun getRegion(key: String): Region {
-        val region = sourceBlueprint.regions[key]
+        val region = blueprint.regions[key]
 
         // verify region
         if (region == null) {
@@ -57,7 +77,7 @@ data class PlacedBlueprint(
      * @return an offset region
      */
     fun getRegionsCombined(vararg keys: String): Region {
-        val nullableRegions = keys.associateWith { key -> sourceBlueprint.regions[key] }
+        val nullableRegions = keys.associateWith { key -> blueprint.regions[key] }
         val regions = nullableRegions.values.filterNotNull()
 
         // verify regions
@@ -74,14 +94,21 @@ data class PlacedBlueprint(
         return CompoundRegion.ofRegionsOffset(offset, *regions.toTypedArray())
     }
 
+    /**
+     * Performs an action for every position in this placed blueprint.
+     */
+    fun forEachPosition(action: Consumer<BlockPos>) {
+        return positions.forEach(action)
+    }
+
     companion object {
         /**
          * The codec for a placed blueprint.
          */
         val CODEC: Codec<PlacedBlueprint> = RecordCodecBuilder.create { instance ->
             instance.group(
-                Blueprint.CODEC.fieldOf("source_blueprint").forGetter(PlacedBlueprint::sourceBlueprint),
-                BlockPos.CODEC.fieldOf("placed_position").forGetter(PlacedBlueprint::placedPosition)
+                Blueprint.CODEC.fieldOf("source_blueprint").forGetter(PlacedBlueprint::blueprint),
+                BlockPos.CODEC.fieldOf("placed_position").forGetter(PlacedBlueprint::position)
             ).apply(instance, ::PlacedBlueprint)
         }
     }
