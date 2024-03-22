@@ -6,6 +6,7 @@ import net.mcbrawls.blueprint.BlueprintMod.logger
 import net.mcbrawls.blueprint.region.CompoundRegion
 import net.mcbrawls.blueprint.region.EmptyRegion
 import net.mcbrawls.blueprint.region.Region
+import net.minecraft.block.Blocks
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
@@ -99,6 +100,15 @@ data class PlacedBlueprint(
      */
     fun forEachPosition(action: Consumer<BlockPos>) {
         return positions.forEach(action)
+    }
+
+    /**
+     * Clears the blueprint from the world.
+     */
+    fun clear(world: ServerWorld) {
+        forEachPosition { pos ->
+           world.setBlockState(pos, Blocks.AIR.defaultState)
+        }
     }
 
     companion object {
