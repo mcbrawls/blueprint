@@ -51,6 +51,7 @@ object BlueprintCommand {
         dispatcher.register(
             literal("blueprint")
                 .executes(::execute)
+                .requires { it.hasPermissionLevel(2) }
                 .then(
                     literal("save")
                         .then(
