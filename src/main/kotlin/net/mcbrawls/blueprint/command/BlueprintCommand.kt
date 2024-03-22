@@ -75,28 +75,31 @@ object BlueprintCommand {
                                         .executes(::executePlace)
                                 )
                         )
-                )
-                .then(
-                    literal("editor")
-                        .then(
-                            literal("open")
+                ).apply {
+                    if (FabricLoader.getInstance().isDevelopmentEnvironment) {
+                        then(
+                            literal("editor")
                                 .then(
-                                    argument(BLUEPRINT_KEY, IdentifierArgumentType.identifier())
-                                        .suggests { _, suggestions -> BlueprintManager.suggestBlueprints(suggestions) }
-                                        .executes(::executeEditorOpen)
+                                    literal("open")
+                                        .then(
+                                            argument(BLUEPRINT_KEY, IdentifierArgumentType.identifier())
+                                                .suggests { _, suggestions -> BlueprintManager.suggestBlueprints(suggestions) }
+                                                .executes(::executeEditorOpen)
+                                        )
+                                )
+                                .then(
+                                    literal("close")
+                                        .requires(::isEditorEnvironment)
+                                        .executes(::executeEditorClose)
+                                )
+                                .then(
+                                    literal("toolset")
+                                        .requires(::isEditorEnvironment)
+                                        .executes(::executeEditorToolset)
                                 )
                         )
-                        .then(
-                            literal("close")
-                                .requires(::isEditorEnvironment)
-                                .executes(::executeEditorClose)
-                        )
-                        .then(
-                            literal("toolset")
-                                .requires(::isEditorEnvironment)
-                                .executes(::executeEditorToolset)
-                        )
-                )
+                    }
+                }
         )
     }
 
