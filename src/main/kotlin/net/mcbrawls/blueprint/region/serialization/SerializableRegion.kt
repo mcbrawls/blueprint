@@ -1,6 +1,7 @@
 package net.mcbrawls.blueprint.region.serialization
 
 import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
 import net.mcbrawls.blueprint.region.CompoundRegion
 import net.mcbrawls.blueprint.region.Region
 import net.minecraft.util.math.Vec3d
@@ -29,14 +30,14 @@ abstract class SerializableRegion(
         /**
          * The codec of this serializable region type.
          */
-        val codec: Codec<out SerializableRegion>
+        val codec: MapCodec<out SerializableRegion>
     )
 
     companion object {
         /**
          * The codec for a serializable region, defined by its type.
          */
-        val CODEC: Codec<SerializableRegion> = SerializableRegionTypes.REGISTRY.getCodec()
+        val CODEC: Codec<SerializableRegion> = SerializableRegionTypes.REGISTRY.codec
             .dispatch(SerializableRegion::type, Type::codec)
     }
 }

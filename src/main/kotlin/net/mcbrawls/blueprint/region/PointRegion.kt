@@ -1,6 +1,6 @@
 package net.mcbrawls.blueprint.region
 
-import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.mcbrawls.blueprint.region.serialization.SerializableRegionTypes
@@ -33,7 +33,7 @@ data class PointRegion(
         /**
          * The codec of a cuboid region.
          */
-        val CODEC: Codec<PointRegion> = RecordCodecBuilder.create { instance ->
+        val CODEC: MapCodec<PointRegion> = RecordCodecBuilder.mapCodec { instance ->
             instance.group(
                 Vec3d.CODEC.fieldOf("position").forGetter(PointRegion::pointPosition),
             ).apply(instance, ::PointRegion)

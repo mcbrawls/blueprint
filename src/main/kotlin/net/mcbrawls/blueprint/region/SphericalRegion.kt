@@ -1,6 +1,7 @@
 package net.mcbrawls.blueprint.region
 
 import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.mcbrawls.blueprint.region.Region.Companion.iterateBoxBlockPositions
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
@@ -53,7 +54,7 @@ data class SphericalRegion(
         /**
          * The codec of a spherical region.
          */
-        val CODEC: Codec<SphericalRegion> = RecordCodecBuilder.create { instance ->
+        val CODEC: MapCodec<SphericalRegion> = RecordCodecBuilder.mapCodec { instance ->
             instance.group(
                 Vec3d.CODEC.fieldOf("root_position").forGetter(SphericalRegion::rootPosition),
                 Codec.DOUBLE.fieldOf("radius").forGetter(SphericalRegion::radius)

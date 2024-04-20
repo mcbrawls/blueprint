@@ -2,6 +2,7 @@ package net.mcbrawls.blueprint
 
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper
 import net.mcbrawls.blueprint.command.BlueprintCommand
@@ -30,7 +31,10 @@ object BlueprintMod : ModInitializer {
         BlueprintEditors
 
         // register config packet receiver
-        ServerPlayNetworking.registerGlobalReceiver(BlueprintConfigC2SPacket.TYPE) { packet, player, _ ->
+        PayloadTypeRegistry.playC2S().register(BlueprintConfigC2SPacket.PACKET_ID, BlueprintConfigC2SPacket.PACKET_CODEC)
+
+        ServerPlayNetworking.registerGlobalReceiver(BlueprintConfigC2SPacket.PACKET_ID) { packet, context ->
+            val player = context.player()
             player.blueprintData = packet.createBlueprintPlayerData()
 
             val playerName = player.gameProfile.name

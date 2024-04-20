@@ -1,10 +1,15 @@
 package net.mcbrawls.blueprint.network
 
-import net.fabricmc.fabric.api.networking.v1.FabricPacket
-import net.fabricmc.fabric.api.networking.v1.PacketType
+import com.mojang.serialization.Codec
+import com.mojang.serialization.codecs.RecordCodecBuilder
+import io.netty.buffer.ByteBuf
 import net.mcbrawls.blueprint.BlueprintMod
 import net.mcbrawls.blueprint.player.BlueprintPlayerData
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.network.codec.PacketCodec
+import net.minecraft.network.codec.PacketCodecs
+import net.minecraft.network.packet.CustomPayload
+import net.minecraft.network.packet.CustomPayload.Id
 import net.minecraft.util.Identifier
 
 /**
@@ -15,17 +20,13 @@ data class BlueprintConfigC2SPacket(
      * Whether the server should render blueprint particles.
      */
     val renderParticles: Boolean,
-) : FabricPacket {
+) : CustomPayload {
     constructor(buf: PacketByteBuf) : this(
         buf.readBoolean()
     )
 
-    override fun write(buf: PacketByteBuf) {
-        buf.writeBoolean(renderParticles)
-    }
-
-    override fun getType(): PacketType<*> {
-        return TYPE
+    override fun getId(): Id<out CustomPayload> {
+        return PACKET_ID
     }
 
     /**
@@ -36,12 +37,14 @@ data class BlueprintConfigC2SPacket(
     }
 
     companion object {
-        /**
-         * The type of the config packet.
-         */
-        val TYPE: PacketType<BlueprintConfigC2SPacket> = PacketType.create(
-            Identifier(BlueprintMod.MOD_ID, "config"),
-            ::BlueprintConfigC2SPacket
-        )
+        val PACKET_ID: Id<BlueprintConfigC2SPacket> = Id(Identifier(BlueprintMod.MOD_ID, "config"))
+
+        val CODEC: Codec<BlueprintConfigC2SPacket> = RecordCodecBuilder.create { instance ->
+            instance.group(
+                Codec.BOOL.fieldOf("render_particles").forGetter(BlueprintConfigC2SPacket::renderParticles)
+            ).apply(instance, ::BlueprintConfigC2SPacket)
+        }
+
+        val PACKET_CODEC: PacketCodec<ByteBuf, BlueprintConfigC2SPacket> = PacketCodecs.codec(CODEC)
     }
 }
