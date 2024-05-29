@@ -35,7 +35,7 @@ class BlueprintEditors private constructor(private val server: MinecraftServer) 
     operator fun get(blueprintId: Identifier): BlueprintEditorEnvironment {
         val blueprintNamespace = blueprintId.namespace
         val blueprintPath = blueprintId.path
-        val worldId = Identifier(BlueprintMod.MOD_ID, "blueprint/$blueprintNamespace/$blueprintPath")
+        val worldId = Identifier.of(BlueprintMod.MOD_ID, "blueprint/$blueprintNamespace/$blueprintPath")
         val worldKey = RegistryKey.of(RegistryKeys.WORLD, worldId)
 
         val environmentWorld = server.getWorld(worldKey)

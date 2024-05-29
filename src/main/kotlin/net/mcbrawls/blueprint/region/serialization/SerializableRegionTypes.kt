@@ -11,7 +11,7 @@ import net.minecraft.registry.SimpleRegistry
 import net.minecraft.util.Identifier
 
 object SerializableRegionTypes {
-    val REGISTRY_ID = Identifier(BlueprintMod.MOD_ID, "serializable_region_types")
+    val REGISTRY_ID = Identifier.of(BlueprintMod.MOD_ID, "serializable_region_types")
 
     /**
      * The registry key for serializable region types.
@@ -40,6 +40,6 @@ object SerializableRegionTypes {
     val SPHERE = register("sphere", SerializableRegion.Type(SphericalRegion.CODEC))
 
     private fun register(id: String, type: SerializableRegion.Type): SerializableRegion.Type {
-        return Registry.register(REGISTRY, Identifier(BlueprintMod.MOD_ID, id), type)
+        return Registry.register(REGISTRY, Identifier.of(BlueprintMod.MOD_ID, id), type)
     }
 }

@@ -37,7 +37,7 @@ data class BlueprintConfigC2SPacket(
     }
 
     companion object {
-        val PACKET_ID: Id<BlueprintConfigC2SPacket> = Id(Identifier(BlueprintMod.MOD_ID, "config"))
+        val PACKET_ID: Id<BlueprintConfigC2SPacket> = Id(Identifier.of(BlueprintMod.MOD_ID, "config"))
 
         val CODEC: Codec<BlueprintConfigC2SPacket> = RecordCodecBuilder.create { instance ->
             instance.group(

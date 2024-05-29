@@ -21,7 +21,7 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
     /**
      * The identifier of the blueprint resource listener.
      */
-    val RESOURCE_ID = Identifier(BlueprintMod.MOD_ID, "blueprints")
+    val RESOURCE_ID = Identifier.of(BlueprintMod.MOD_ID, "blueprints")
 
     /**
      * The resource finder for blueprint nbt files.
