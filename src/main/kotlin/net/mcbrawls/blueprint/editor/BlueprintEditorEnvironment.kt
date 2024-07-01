@@ -1,12 +1,12 @@
 package net.mcbrawls.blueprint.editor
 
-import dev.andante.bubble.world.BubbleWorld
 import net.minecraft.registry.RegistryKey
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import net.minecraft.world.dimension.DimensionOptions
+import xyz.nucleoid.fantasy.RuntimeWorld
+import xyz.nucleoid.fantasy.RuntimeWorldConfig
 
 /**
  * A custom world for managing blueprints.
@@ -19,8 +19,9 @@ class BlueprintEditorEnvironment(
 
     server: MinecraftServer,
     key: RegistryKey<World>,
-    options: DimensionOptions
-) : BubbleWorld(server, key, options) {
+    config: RuntimeWorldConfig,
+    style: Style
+) : RuntimeWorld(server, key, config, style) {
     companion object {
         val ROOT_POSITION = BlockPos(0, 200, 0)
     }

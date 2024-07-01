@@ -55,7 +55,8 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:$fabric_version"
     modImplementation "net.fabricmc:fabric-language-kotlin:$fabric_kotlin_version"
 
-    include modImplementation ("dev.andante:bubble:$bubble_version")
+    include modImplementation ("xyz.nucleoid:fantasy:$fantasy_version")
+
     include modImplementation ("dev.andante:audience:$audience_version")
     include modImplementation ("dev.andante:codex:$codex_version")
 

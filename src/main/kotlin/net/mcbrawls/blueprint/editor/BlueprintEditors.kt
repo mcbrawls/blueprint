@@ -1,7 +1,6 @@
 package net.mcbrawls.blueprint.editor
 
 import com.google.common.base.Preconditions
-import dev.andante.bubble.BubbleManager
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
@@ -10,6 +9,12 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
+import net.minecraft.world.GameRules
+import net.minecraft.world.biome.BiomeKeys
+import xyz.nucleoid.fantasy.Fantasy
+import xyz.nucleoid.fantasy.RuntimeWorldConfig
+import xyz.nucleoid.fantasy.RuntimeWorldHandle
+import xyz.nucleoid.fantasy.util.VoidChunkGenerator
 
 /**
  * Manages all blueprint editor environments for a server.
@@ -18,13 +23,13 @@ class BlueprintEditors private constructor(private val server: MinecraftServer) 
     /**
      * All active blueprint editor environments.
      */
-    private val environments: MutableMap<Identifier, BlueprintEditorEnvironment> = mutableMapOf()
+    private val environments: MutableMap<Identifier, RuntimeWorldHandle> = mutableMapOf()
 
     fun tick() {
     }
 
     fun clean() {
-        environments.values.forEach(BubbleManager.getOrCreate(server)::remove)
+        environments.values.forEach(RuntimeWorldHandle::delete)
     }
 
     /**
@@ -48,13 +53,26 @@ class BlueprintEditors private constructor(private val server: MinecraftServer) 
                 throw IllegalStateException("World existed for blueprint but was not environment: $blueprintId")
             }
         } else {
-            val bubbleManager = BubbleManager.getOrCreate(server)
-            val editorEnvironment = bubbleManager.createAndInitialize(
-                identifier = worldId,
-                factory = { server, key, options -> BlueprintEditorEnvironment(blueprintId, server, key, options) }
+            val fantasy = Fantasy.get(server)
+            val handle = fantasy.openTemporaryWorld(
+                worldId,
+                RuntimeWorldConfig()
+                    .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
+                    .setGenerator(VoidChunkGenerator(server.registryManager.get(RegistryKeys.BIOME), BiomeKeys.THE_VOID))
+                    .setWorldConstructor { server, key, config, style ->
+                        BlueprintEditorEnvironment(
+                            blueprintId,
+                            server,
+                            key,
+                            config,
+                            style
+                        )
+                    }
             )
 
-            environments[blueprintId] = editorEnvironment
+            environments[blueprintId] = handle
+
+            val editorEnvironment = handle.asWorld() as BlueprintEditorEnvironment
             editorEnvironment
         }
 
@@ -66,7 +84,7 @@ class BlueprintEditors private constructor(private val server: MinecraftServer) 
      * @return a nullable blueprint editor environment
      */
     fun getNullable(blueprintId: Identifier): BlueprintEditorEnvironment? {
-        return environments[blueprintId]
+        return environments[blueprintId]?.asWorld() as? BlueprintEditorEnvironment
     }
 
     /**
@@ -74,9 +92,9 @@ class BlueprintEditors private constructor(private val server: MinecraftServer) 
      * @return whether the environment was removed
      */
     fun remove(environment: BlueprintEditorEnvironment): Boolean {
-        return if (environments.remove(environment.blueprintId) != null) {
-            val bubbleManager = BubbleManager.getOrCreate(server)
-            bubbleManager.remove(environment)
+        val handle = environments.remove(environment.blueprintId)
+        return if (handle != null) {
+            handle.delete()
             true
         } else {
             false
