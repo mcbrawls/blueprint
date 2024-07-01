@@ -48,7 +48,6 @@
 		"java": ">=17",
 		"fabric-api": ">=0.90",
 		"fabric-language-kotlin": ">=1.9",
-        "bubble": "*",
         "audience": "*",
         "codex": "*",
         "sgui": "*",
