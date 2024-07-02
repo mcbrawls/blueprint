@@ -72,7 +72,7 @@ data class Blueprint(
                     i++
                 }
 
-                progress.set(i.toFloat() / totalBlocks)
+                progress.set(i / totalBlocks.toFloat())
             }
 
             PlacedBlueprint(this, position)
