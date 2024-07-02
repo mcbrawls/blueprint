@@ -65,16 +65,15 @@ data class Blueprint(
         val progress = AtomicReference(0.0f)
 
         val future: CompletableFuture<PlacedBlueprint> = CompletableFuture.supplyAsync {
-            var i = 0
-            forEach { offset, state ->
-                synchronized(world) {
+            synchronized(world) {
+                var i = 0
+                forEach { offset, state ->
                     world.setBlockState(position.add(offset), state)
+                    i++
                 }
 
-                i++
+                progress.set(i.toFloat() / totalBlocks)
             }
-
-            progress.set(i.toFloat() / totalBlocks)
 
             PlacedBlueprint(this, position)
         }
