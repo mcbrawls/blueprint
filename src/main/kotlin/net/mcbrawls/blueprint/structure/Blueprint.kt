@@ -69,10 +69,8 @@ data class Blueprint(
                 var i = 0
                 forEach { offset, state ->
                     world.setBlockState(position.add(offset), state)
-                    i++
+                    progress.set(++i / totalBlocks.toFloat())
                 }
-
-                progress.set(i / totalBlocks.toFloat())
             }
 
             PlacedBlueprint(this, position)
