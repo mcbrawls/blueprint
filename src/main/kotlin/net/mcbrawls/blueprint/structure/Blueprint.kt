@@ -7,6 +7,8 @@ import net.minecraft.block.BlockState
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicReference
 import java.util.function.BiConsumer
 
 /**
@@ -39,6 +41,11 @@ data class Blueprint(
     val center: Vec3i = Vec3i(size.x / 2, size.y / 2, size.z / 2)
 
     /**
+     * The total amount of blocks placed from this blueprint.
+     */
+    val totalBlocks: Int = palettedBlockStates.size
+
+    /**
      * Places this blueprint in the world at the given position.
      * @return a placed blueprint
      */
@@ -48,6 +55,28 @@ data class Blueprint(
         }
 
         return PlacedBlueprint(this, position)
+    }
+
+    /**
+     * Launches a completable future placing this blueprint in the world at the given position.
+     * @return a placed blueprint future and a progress provider
+     */
+    fun placeWithProgress(world: ServerWorld, position: BlockPos): Pair<CompletableFuture<PlacedBlueprint>, ProgressProvider> {
+        val progress = AtomicReference(0.0f)
+
+        val future: CompletableFuture<PlacedBlueprint> = CompletableFuture.supplyAsync {
+            var i = 0
+            forEach { offset, state ->
+                world.setBlockState(position.add(offset), state)
+                i++
+            }
+
+            progress.set(i.toFloat() / totalBlocks)
+
+            PlacedBlueprint(this, position)
+        }
+
+        return future to ProgressProvider(progress::get)
     }
 
     /**
