@@ -67,7 +67,10 @@ data class Blueprint(
         val future: CompletableFuture<PlacedBlueprint> = CompletableFuture.supplyAsync {
             var i = 0
             forEach { offset, state ->
-                world.setBlockState(position.add(offset), state)
+                synchronized(world) {
+                    world.setBlockState(position.add(offset), state)
+                }
+
                 i++
             }
 
