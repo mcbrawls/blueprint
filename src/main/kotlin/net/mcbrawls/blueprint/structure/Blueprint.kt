@@ -49,9 +49,10 @@ data class Blueprint(
      * Places this blueprint in the world at the given position.
      * @return a placed blueprint
      */
-    fun place(world: ServerWorld, position: BlockPos): PlacedBlueprint {
+    fun place(world: ServerWorld, position: BlockPos, processor: BlockStateProcessor? = null): PlacedBlueprint {
         forEach { offset, state ->
-            world.setBlockState(position.add(offset), state)
+            val trueState = processor?.process(state) ?: state
+            world.setBlockState(position.add(offset), trueState)
         }
 
         return PlacedBlueprint(this, position)
@@ -61,14 +62,15 @@ data class Blueprint(
      * Launches a completable future placing this blueprint in the world at the given position.
      * @return a placed blueprint future and a progress provider
      */
-    fun placeWithProgress(world: ServerWorld, position: BlockPos): Pair<CompletableFuture<PlacedBlueprint>, ProgressProvider> {
+    fun placeWithProgress(world: ServerWorld, position: BlockPos, processor: BlockStateProcessor? = null): Pair<CompletableFuture<PlacedBlueprint>, ProgressProvider> {
         val progress = AtomicReference(0.0f)
 
         val future: CompletableFuture<PlacedBlueprint> = CompletableFuture.supplyAsync {
             synchronized(world) {
                 var i = 0
                 forEach { offset, state ->
-                    world.setBlockState(position.add(offset), state)
+                    val trueState = processor?.process(state) ?: state
+                    world.setBlockState(position.add(offset), trueState)
                     progress.set(++i / totalBlocks.toFloat())
                 }
             }
