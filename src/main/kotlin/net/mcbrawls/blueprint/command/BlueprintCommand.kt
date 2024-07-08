@@ -17,6 +17,7 @@ import net.mcbrawls.blueprint.editor.BlueprintEditorGui
 import net.mcbrawls.blueprint.editor.BlueprintEditors
 import net.mcbrawls.blueprint.resource.BlueprintManager
 import net.mcbrawls.blueprint.structure.Blueprint
+import net.mcbrawls.blueprint.structure.BlueprintBlockEntity
 import net.mcbrawls.blueprint.structure.PalettedState
 import net.mcbrawls.sgui.openGui
 import net.minecraft.block.BlockState
@@ -121,21 +122,30 @@ object BlueprintCommand {
 
         // create paletted positions
         val palette = mutableListOf<BlockState>()
-        val palettedBlockStates = positions.mapNotNull { pos ->
+        val blockEntities = mutableListOf<BlueprintBlockEntity>()
+        val palettedBlockStates = mutableListOf<PalettedState>()
+
+        positions.forEach { pos ->
+            val relativePos = pos.subtract(min)
+
+            // state
             val state = world.getBlockState(pos)
-            if (state.isAir) {
-                // disregard air
-                null
-            } else {
+            if (!state.isAir) {
                 // build palette
                 if (state !in palette) {
                     palette.add(state)
                 }
 
                 // create paletted state
-                val relativePos = pos.subtract(min)
                 val paletteId = palette.indexOf(state)
-                PalettedState(relativePos, paletteId)
+                palettedBlockStates.add(PalettedState(relativePos, paletteId))
+            }
+
+            // block entity
+            val blockEntity = world.getBlockEntity(pos)
+            if (blockEntity != null) {
+                val nbt = blockEntity.createNbt(world.registryManager)
+                blockEntities.add(BlueprintBlockEntity(relativePos, nbt))
             }
         }
 
@@ -144,7 +154,7 @@ object BlueprintCommand {
         val size = Vec3i(blockBox.blockCountX, blockBox.blockCountZ, blockBox.blockCountZ)
 
         // create blueprint
-        val blueprint = Blueprint(palette, palettedBlockStates, size, mapOf())
+        val blueprint = Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), size, mapOf())
         val nbt = Blueprint.CODEC.encodeQuick(NbtOps.INSTANCE, blueprint)
 
         // save blueprint

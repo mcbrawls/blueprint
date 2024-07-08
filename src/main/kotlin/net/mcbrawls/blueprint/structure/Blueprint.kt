@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.minecraft.block.BlockState
+import net.minecraft.nbt.NbtCompound
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
@@ -24,6 +25,11 @@ data class Blueprint(
      * A list of paletted states, mapping palette indexes to their positions.
      */
     val palettedBlockStates: List<PalettedState>,
+
+    /**
+     * A list of block entities stored within the blueprint.
+     */
+    val blockEntities: Map<BlockPos, BlueprintBlockEntity>,
 
     /**
      * The size of the blueprint.
@@ -50,11 +56,7 @@ data class Blueprint(
      * @return a placed blueprint
      */
     fun place(world: ServerWorld, position: BlockPos, processor: BlockStateProcessor? = null): PlacedBlueprint {
-        forEach { offset, state ->
-            val trueState = processor?.process(state) ?: state
-            world.setBlockState(position.add(offset), trueState)
-        }
-
+        forEach { offset, (state, blockEntityNbt) -> placePosition(world, position, offset, state, blockEntityNbt, processor) }
         return PlacedBlueprint(this, position)
     }
 
@@ -68,9 +70,8 @@ data class Blueprint(
         val future: CompletableFuture<PlacedBlueprint> = CompletableFuture.supplyAsync {
             synchronized(world) {
                 var i = 0
-                forEach { offset, state ->
-                    val trueState = processor?.process(state) ?: state
-                    world.setBlockState(position.add(offset), trueState)
+                forEach { offset, (state, blockEntityNbt) ->
+                    placePosition(world, position, offset, state, blockEntityNbt, processor)
                     progress.set(++i / totalBlocks.toFloat())
                 }
             }
@@ -82,12 +83,30 @@ data class Blueprint(
     }
 
     /**
+     * Places a position's block data to the world.
+     */
+    private fun placePosition(world: ServerWorld, position: BlockPos, offset: BlockPos, state: BlockState, blockEntityNbt: NbtCompound?, processor: BlockStateProcessor?) {
+        val trueState = processor?.process(state) ?: state
+        val truePos = position.add(offset)
+
+        // state
+        world.setBlockState(truePos, trueState)
+
+        // block entity
+        if (blockEntityNbt != null) {
+            val blockEntity = world.getBlockEntity(truePos)
+            blockEntity?.read(blockEntityNbt, world.registryManager)
+        }
+    }
+
+    /**
      * Performs the given action for every position in the blueprint.
      */
-    fun forEach(action: BiConsumer<BlockPos, BlockState>) {
+    fun forEach(action: BiConsumer<BlockPos, Pair<BlockState, NbtCompound?>>) {
         palettedBlockStates.forEach { (offset, index) ->
             val state = palette[index]
-            action.accept(offset, state)
+            val blockEntity = blockEntities[offset]?.nbt
+            action.accept(offset, state to blockEntity)
         }
     }
 
@@ -103,11 +122,17 @@ data class Blueprint(
                 PalettedState.CODEC.listOf()
                     .fieldOf("block_states")
                     .forGetter(Blueprint::palettedBlockStates),
+                BlueprintBlockEntity.CODEC.listOf()
+                    .fieldOf("block_entities")
+                    .xmap({ entry -> entry.associateBy(BlueprintBlockEntity::blockPos) }, { map -> map.values.toList() })
+                    .orElseGet(::emptyMap)
+                    .forGetter(Blueprint::blockEntities),
                 Vec3i.CODEC
                     .fieldOf("size")
                     .forGetter(Blueprint::size),
                 Codec.unboundedMap(Codec.STRING, SerializableRegion.CODEC)
                     .fieldOf("regions")
+                    .orElseGet(::emptyMap)
                     .forGetter(Blueprint::regions)
             ).apply(instance, ::Blueprint)
         }
@@ -115,6 +140,6 @@ data class Blueprint(
         /**
          * An entirely empty blueprint.
          */
-        val EMPTY = Blueprint(emptyList(), emptyList(), Vec3i.ZERO, emptyMap())
+        val EMPTY = Blueprint(emptyList(), emptyList(), emptyMap(), Vec3i.ZERO, emptyMap())
     }
 }
