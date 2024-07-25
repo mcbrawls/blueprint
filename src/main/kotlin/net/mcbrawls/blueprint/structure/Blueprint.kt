@@ -64,7 +64,7 @@ data class Blueprint(
      * Launches a completable future placing this blueprint in the world at the given position.
      * @return a placed blueprint future and a progress provider
      */
-    fun placeWithProgress(world: ServerWorld, position: BlockPos, processor: BlockStateProcessor? = null): Pair<CompletableFuture<PlacedBlueprint>, ProgressProvider> {
+    fun placeWithProgress(world: ServerWorld, position: BlockPos, processor: BlockStateProcessor? = null): ProgressiveFuture<PlacedBlueprint> {
         val progress = AtomicReference(0.0f)
 
         val future: CompletableFuture<PlacedBlueprint> = CompletableFuture.supplyAsync {
@@ -79,7 +79,7 @@ data class Blueprint(
             PlacedBlueprint(this, position)
         }
 
-        return future to ProgressProvider(progress::get)
+        return ProgressiveFuture(future, ProgressProvider(progress::get))
     }
 
     /**
@@ -141,5 +141,27 @@ data class Blueprint(
          * An entirely empty blueprint.
          */
         val EMPTY = Blueprint(emptyList(), emptyList(), emptyMap(), Vec3i.ZERO, emptyMap())
+
+        /**
+         * Flattens a set of placed blueprint futures into one progressive future.
+         * @return a progressive future of combined futures and progress provider
+         */
+        fun flattenFutures(futures: Set<ProgressiveFuture<PlacedBlueprint>>): ProgressiveFuture<*> {
+            // create compounded future
+            val future = CompletableFuture.runAsync {
+                val completableFutures = futures.map(ProgressiveFuture<*>::future)
+                completableFutures.forEach(CompletableFuture<*>::join)
+            }
+
+            // provide average progress
+            val provider = ProgressProvider {
+                val providers = futures.map(ProgressiveFuture<*>::progressProvider)
+                val progresses = providers.map(ProgressProvider::getProgress)
+                val average = progresses.average()
+                average.toFloat()
+            }
+
+            return ProgressiveFuture(future, provider)
+        }
     }
 }
