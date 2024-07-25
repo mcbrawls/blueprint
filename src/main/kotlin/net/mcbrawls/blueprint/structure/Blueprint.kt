@@ -146,7 +146,7 @@ data class Blueprint(
          * Flattens a set of placed blueprint futures into one progressive future.
          * @return a progressive future of combined futures and progress provider
          */
-        fun flattenFutures(futures: Set<ProgressiveFuture<PlacedBlueprint>>): ProgressiveFuture<*> {
+        fun flattenFutures(vararg futures: ProgressiveFuture<PlacedBlueprint>): ProgressiveFuture<*> {
             // create compounded future
             val future = CompletableFuture.runAsync {
                 val completableFutures = futures.map(ProgressiveFuture<*>::future)
