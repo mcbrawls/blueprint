@@ -75,7 +75,7 @@ data class PlacedBlueprint(
         }
 
         // return offset compound region
-        return CompoundRegion.ofRegionsOffset(offset, region)
+        return region.withOffset(offset)
     }
 
     /**

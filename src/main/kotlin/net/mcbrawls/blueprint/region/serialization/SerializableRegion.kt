@@ -2,7 +2,6 @@ package net.mcbrawls.blueprint.region.serialization
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
-import net.mcbrawls.blueprint.region.CompoundRegion
 import net.mcbrawls.blueprint.region.Region
 import net.minecraft.util.math.Vec3d
 
@@ -19,9 +18,7 @@ abstract class SerializableRegion(
      * Creates a compound of this region with the given offset.
      * @return a compound region
      */
-    fun withOffset(offset: Vec3d): CompoundRegion {
-        return CompoundRegion.ofRegionsOffset(offset, this)
-    }
+    abstract fun withOffset(offset: Vec3d): Region
 
     /**
      * A type of serializable region.

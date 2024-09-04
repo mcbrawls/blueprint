@@ -50,6 +50,10 @@ data class SphericalRegion(
         return entity.squaredDistanceTo(rootPosition.add(offset)) <= radius
     }
 
+    override fun withOffset(offset: Vec3d): Region {
+        return copy(rootPosition = rootPosition.add(offset))
+    }
+
     companion object {
         /**
          * The codec of a spherical region.

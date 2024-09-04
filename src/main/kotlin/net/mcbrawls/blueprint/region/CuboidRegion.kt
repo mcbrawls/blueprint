@@ -54,6 +54,10 @@ data class CuboidRegion(
         return entity.boundingBox.intersects(box)
     }
 
+    override fun withOffset(offset: Vec3d): Region {
+        return copy(rootPosition = rootPosition.add(offset))
+    }
+
     companion object {
         /**
          * The codec of a cuboid region.

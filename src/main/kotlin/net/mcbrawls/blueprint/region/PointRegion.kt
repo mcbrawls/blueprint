@@ -29,6 +29,10 @@ data class PointRegion(
         return entity.blockPos.equals(pointPosition.add(offset))
     }
 
+    override fun withOffset(offset: Vec3d): Region {
+        return copy(pointPosition = pointPosition.add(offset))
+    }
+
     companion object {
         /**
          * The codec of a cuboid region.
