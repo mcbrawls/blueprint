@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.mcbrawls.blueprint.BlueprintMod.logger
 import net.mcbrawls.blueprint.region.CompoundRegion
 import net.mcbrawls.blueprint.region.EmptyRegion
+import net.mcbrawls.blueprint.region.PointRegion
 import net.mcbrawls.blueprint.region.Region
 import net.minecraft.block.Blocks
 import net.minecraft.server.world.ServerWorld
@@ -98,6 +99,23 @@ data class PlacedBlueprint(
 
         // return offset compound region
         return CompoundRegion.ofRegionsOffset(offset, *regions.toTypedArray())
+    }
+
+    /**
+     * Gets the position of a point region.
+     */
+    fun PlacedBlueprint.getPointRegionPos(id: String): Vec3d {
+        val region = getRegion(id)
+        val pointRegion = region as? PointRegion ?: throw IllegalArgumentException("Not a point region: $id")
+        return pointRegion.pointPosition
+    }
+
+    /**
+     * Gets the block position of a point region.
+     */
+    fun PlacedBlueprint.getPointRegionBlockPos(id: String, function: (Vec3d) -> BlockPos = BlockPos::ofFloored): BlockPos {
+        val pos = getPointRegionPos(id)
+        return function.invoke(pos)
     }
 
     /**
