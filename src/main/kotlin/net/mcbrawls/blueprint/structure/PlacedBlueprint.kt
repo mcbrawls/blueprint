@@ -104,7 +104,7 @@ data class PlacedBlueprint(
     /**
      * Gets the position of a point region.
      */
-    fun PlacedBlueprint.getPointRegionPos(id: String): Vec3d {
+    fun getPointRegionPos(id: String): Vec3d {
         val region = getRegion(id)
         val pointRegion = region as? PointRegion ?: throw IllegalArgumentException("Not a point region: $id")
         return pointRegion.pointPosition
@@ -113,7 +113,7 @@ data class PlacedBlueprint(
     /**
      * Gets the block position of a point region.
      */
-    fun PlacedBlueprint.getPointRegionBlockPos(id: String, function: (Vec3d) -> BlockPos = BlockPos::ofFloored): BlockPos {
+    fun getPointRegionBlockPos(id: String, function: (Vec3d) -> BlockPos = BlockPos::ofFloored): BlockPos {
         val pos = getPointRegionPos(id)
         return function.invoke(pos)
     }
