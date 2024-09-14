@@ -3,6 +3,7 @@ package net.mcbrawls.blueprint.structure
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.server.world.ServerWorld
@@ -90,7 +91,7 @@ data class Blueprint(
         val truePos = position.add(offset)
 
         // state
-        world.setBlockState(truePos, trueState)
+        world.setBlockState(truePos, trueState, Block.NOTIFY_LISTENERS or Block.FORCE_STATE or Block.NO_REDRAW)
 
         // block entity
         if (blockEntityNbt != null) {
