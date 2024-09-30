@@ -1,7 +1,7 @@
 //file:noinspection All
 
 plugins {
-    id "fabric-loom" version "1.6-SNAPSHOT"
+    id "fabric-loom" version "1.7-SNAPSHOT"
     id "org.jetbrains.kotlin.jvm"
     id "maven-publish"
 }
@@ -55,15 +55,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:$fabric_version"
     modImplementation "net.fabricmc:fabric-language-kotlin:$fabric_kotlin_version"
 
-    include modImplementation ("xyz.nucleoid:fantasy:$fantasy_version")
-
-    include modImplementation ("dev.andante:audience:$audience_version")
     include modImplementation ("dev.andante:codex:$codex_version")
-
-    include modImplementation ("eu.pb4:sgui:$sgui_version")
-    include modImplementation ("net.mcbrawls:brawls-sgui:$brawls_sgui_version")
-
-    modImplementation "com.ptsmods:devlogin:$devlogin_version"
 
     // test
     testImplementation sourceSets.main.output
