@@ -1,7 +1,7 @@
 //file:noinspection All
 
 plugins {
-    id "fabric-loom" version "1.7-SNAPSHOT"
+    id "fabric-loom" version "1.8-SNAPSHOT"
     id "org.jetbrains.kotlin.jvm"
     id "maven-publish"
 }
@@ -56,6 +56,9 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:$fabric_kotlin_version"
 
     include modImplementation ("dev.andante:codex:$codex_version")
+
+    include modImplementation ("xyz.nucleoid:fantasy:$fantasy_version")
+    include modImplementation ("eu.pb4:polymer-core:$polymer_version")
 
     // test
     testImplementation sourceSets.main.output

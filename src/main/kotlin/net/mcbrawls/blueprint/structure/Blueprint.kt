@@ -2,13 +2,21 @@ package net.mcbrawls.blueprint.structure
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
+import dev.andante.codex.encodeQuick
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup.world
+import net.mcbrawls.blueprint.asExtremeties
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtIo
+import net.minecraft.nbt.NbtOps
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockBox
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
+import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.BiConsumer
@@ -163,6 +171,59 @@ data class Blueprint(
             }
 
             return ProgressiveFuture(future, provider)
+        }
+
+        fun save(world: ServerWorld, min: BlockPos, max: BlockPos, blueprintId: Identifier): String {
+            // list positions
+            val positions = BlockPos.iterate(min, max)
+
+            // create paletted positions
+            val palette = mutableListOf<BlockState>()
+            val blockEntities = mutableListOf<BlueprintBlockEntity>()
+            val palettedBlockStates = mutableListOf<PalettedState>()
+
+            positions.forEach { pos ->
+                val relativePos = pos.subtract(min)
+
+                // state
+                val state = world.getBlockState(pos)
+                if (!state.isAir) {
+                    // build palette
+                    if (state !in palette) {
+                        palette.add(state)
+                    }
+
+                    // create paletted state
+                    val paletteId = palette.indexOf(state)
+                    palettedBlockStates.add(PalettedState(relativePos, paletteId))
+                }
+
+                // block entity
+                val blockEntity = world.getBlockEntity(pos)
+                if (blockEntity != null) {
+                    val nbt = blockEntity.createNbt(world.registryManager)
+                    blockEntities.add(BlueprintBlockEntity(relativePos, nbt))
+                }
+            }
+
+            // create size
+            val blockBox = BlockBox(min.x, min.y, min.z, max.x, max.y, max.z)
+            val size = Vec3i(blockBox.blockCountX, blockBox.blockCountZ, blockBox.blockCountZ)
+
+            // create blueprint
+            val blueprint = Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), size, mapOf())
+            val nbt = CODEC.encodeQuick(NbtOps.INSTANCE, blueprint)
+
+            // save blueprint
+            val blueprintNamespace = blueprintId.namespace
+            val blueprintPath = blueprintId.path
+
+            val pathString = "generated/$blueprintNamespace/blueprints/$blueprintPath.nbt"
+            val path = Path.of(pathString)
+
+            path.parent.toFile().mkdirs()
+            NbtIo.writeCompressed(nbt as NbtCompound, path)
+            return pathString
         }
     }
 }

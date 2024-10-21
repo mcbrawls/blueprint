@@ -84,55 +84,8 @@ object BlueprintCommand {
         // order positions
         val (min, max) = inputStartPosition.asExtremeties(inputEndPosition)
 
-        // list positions
-        val positions = BlockPos.iterate(min, max)
-
-        // create paletted positions
-        val palette = mutableListOf<BlockState>()
-        val blockEntities = mutableListOf<BlueprintBlockEntity>()
-        val palettedBlockStates = mutableListOf<PalettedState>()
-
-        positions.forEach { pos ->
-            val relativePos = pos.subtract(min)
-
-            // state
-            val state = world.getBlockState(pos)
-            if (!state.isAir) {
-                // build palette
-                if (state !in palette) {
-                    palette.add(state)
-                }
-
-                // create paletted state
-                val paletteId = palette.indexOf(state)
-                palettedBlockStates.add(PalettedState(relativePos, paletteId))
-            }
-
-            // block entity
-            val blockEntity = world.getBlockEntity(pos)
-            if (blockEntity != null) {
-                val nbt = blockEntity.createNbt(world.registryManager)
-                blockEntities.add(BlueprintBlockEntity(relativePos, nbt))
-            }
-        }
-
-        // create size
-        val blockBox = BlockBox(min.x, min.y, min.z, max.x, max.y, max.z)
-        val size = Vec3i(blockBox.blockCountX, blockBox.blockCountZ, blockBox.blockCountZ)
-
-        // create blueprint
-        val blueprint = Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), size, mapOf())
-        val nbt = Blueprint.CODEC.encodeQuick(NbtOps.INSTANCE, blueprint)
-
-        // save blueprint
-        val blueprintNamespace = blueprintId.namespace
-        val blueprintPath = blueprintId.path
-
-        val pathString = "generated/$blueprintNamespace/blueprints/$blueprintPath.nbt"
-        val path = Path.of(pathString)
-
-        path.parent.toFile().mkdirs()
-        NbtIo.writeCompressed(nbt as NbtCompound, path)
+        // save
+        val pathString = Blueprint.save(world, min, max, blueprintId)
 
         // feedback
         context.source.sendFeedback({ Text.literal("Saved blueprint to \"$pathString\"") }, true)
