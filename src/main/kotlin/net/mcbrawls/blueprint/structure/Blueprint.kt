@@ -2,20 +2,17 @@ package net.mcbrawls.blueprint.structure
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
-import dev.andante.codex.encodeQuick
 import net.mcbrawls.blueprint.editor.block.RegionBlock
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
+import net.mcbrawls.blueprint.resource.BlueprintManager
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtIo
-import net.minecraft.nbt.NbtOps
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockBox
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
-import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.BiConsumer
@@ -214,18 +211,7 @@ data class Blueprint(
 
             // create blueprint
             val blueprint = Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), size, regions)
-            val nbt = CODEC.encodeQuick(NbtOps.INSTANCE, blueprint)
-
-            // save blueprint
-            val blueprintNamespace = blueprintId.namespace
-            val blueprintPath = blueprintId.path
-
-            val pathString = "generated/$blueprintNamespace/blueprints/$blueprintPath.nbt"
-            val path = Path.of(pathString)
-
-            path.parent.toFile().mkdirs()
-            NbtIo.writeCompressed(nbt as NbtCompound, path)
-            return pathString
+            return BlueprintManager.saveGenerated(world.server, blueprintId, blueprint)
         }
     }
 }

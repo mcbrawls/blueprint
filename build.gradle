@@ -59,6 +59,7 @@ dependencies {
 
     include modImplementation ("xyz.nucleoid:fantasy:$fantasy_version")
     include modImplementation ("eu.pb4:polymer-core:$polymer_version")
+    include modImplementation ("eu.pb4:sgui:$sgui_version")
 
     // test
     testImplementation sourceSets.main.output
@@ -71,6 +72,7 @@ dependencies {
 
 loom {
     runtimeOnlyLog4j = true
+    accessWidenerPath = file("src/main/resources/${mod_id}.accesswidener")
 
     mods {
         mod_id {

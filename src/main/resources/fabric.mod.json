@@ -36,6 +36,7 @@
 			"environment": "client"
 		}
 	],
+	"accessWidener": "blueprint.accesswidener",
     "custom": {
         "loom:injected_interfaces": {
             "net/minecraft/class_3222": [

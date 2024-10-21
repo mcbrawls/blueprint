@@ -4,6 +4,7 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 import net.minecraft.world.World
@@ -30,29 +31,32 @@ object BlueprintEditorHandler {
 
         // create world
         val fantasy = Fantasy.get(server)
-        val handle = handles[blueprintId] ?: run {
-            val handle = fantasy.openTemporaryWorld(
-                RuntimeWorldConfig()
-                    .setGenerator(VoidChunkGenerator(server, BiomeKeys.THE_VOID))
-                    .setWorldConstructor { server, key, config, _ -> BlueprintEditorWorld(blueprintId, server, key, config) }
-            )
+        val (handle, world) = handles[blueprintId]?.let { handle -> handle to (handle.asWorld() as BlueprintEditorWorld) }
+            ?: run {
+                val handle = fantasy.openTemporaryWorld(
+                    RuntimeWorldConfig()
+                        .setGenerator(VoidChunkGenerator(server, BiomeKeys.THE_VOID))
+                        .setWorldConstructor { server, key, config, _ -> BlueprintEditorWorld(blueprintId, server, key, config) }
+                )
 
-            // initialize world
-            val world = handle.asWorld() as BlueprintEditorWorld
-            new = world.initializeBlueprint()
+                // initialize world
+                val world = handle.asWorld() as BlueprintEditorWorld
+                new = world.initializeBlueprint()
 
-            handle
-        }
+                handle to world
+            }
 
         // store
         handles[blueprintId] = handle
 
-        val world = handle.asWorld()
         keys[world.registryKey] = blueprintId
 
         // teleport player
         player?.also { player ->
-            val pos = BlueprintEditorWorld.BLUEPRINT_PLACEMENT_POS
+            val minPos = world.minPos
+            val maxPos = world.maxPos
+            val posDiff = maxPos.subtract(minPos)
+            val pos = BlockPos((minPos.x + posDiff.x / 2), (minPos.y + posDiff.y / 2), (minPos.z + posDiff.z / 2))
             val vec = Vec3d.ofBottomCenter(pos)
             player.teleport(world, vec.x, vec.y, vec.z, 0.0f, 0.0f)
 

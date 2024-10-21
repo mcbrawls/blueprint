@@ -14,7 +14,8 @@ import net.minecraft.text.Text
 
 object BlueprintEditorCommand {
     const val BLUEPRINT_KEY = "blueprint"
-    private val NOT_BLUEPRINT_EDITOR_WORLD_EXCEPTION = SimpleCommandExceptionType(Text.literal("You are not in a Blueprint editor world"))
+    private val NOT_BLUEPRINT_EDITOR_WORLD_EXCEPTION = SimpleCommandExceptionType(Text.literal("You are not in a Blueprint editor."))
+    private val IN_BLUEPRINT_EDITOR_WORLD_EXCEPTION = SimpleCommandExceptionType(Text.literal("You are already in a Blueprint editor. Use /blueprint-editor close to leave."))
 
     fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {
         dispatcher.register(
@@ -45,10 +46,14 @@ object BlueprintEditorCommand {
         val source = context.source
         val server = source.server
 
-        if (BlueprintEditorHandler.open(server, blueprintId, source.player)) {
-            source.sendFeedback({ Text.literal("Opened Blueprint editor for new blueprint \"$blueprintId\"") }, true)
+        if (source.world is BlueprintEditorWorld) {
+            throw IN_BLUEPRINT_EDITOR_WORLD_EXCEPTION.create()
         } else {
-            source.sendFeedback({ Text.literal("Opened Blueprint editor for \"$blueprintId\"") }, true)
+            if (BlueprintEditorHandler.open(server, blueprintId, source.player)) {
+                source.sendFeedback({ Text.literal("Opened Blueprint editor for new blueprint \"$blueprintId\"") }, true)
+            } else {
+                source.sendFeedback({ Text.literal("Opened Blueprint editor for \"$blueprintId\"") }, true)
+            }
         }
 
         return 1
@@ -66,7 +71,7 @@ object BlueprintEditorCommand {
         val source = context.source
         val world = source.world as? BlueprintEditorWorld ?: throw NOT_BLUEPRINT_EDITOR_WORLD_EXCEPTION.create()
         val pathString = world.saveBlueprint()
-        source.sendFeedback({ Text.literal("Saved editor Blueprint to $pathString") }, true)
+        source.sendFeedback({ Text.literal("Saved editor blueprint: \"$pathString\"") }, true)
         return 1
     }
 }
