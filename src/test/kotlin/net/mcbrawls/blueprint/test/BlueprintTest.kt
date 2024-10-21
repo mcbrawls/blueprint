@@ -46,7 +46,7 @@ object BlueprintTest : ModInitializer {
         }
         ServerTickEvents.END_SERVER_TICK.register { server ->
             server.playerManager.playerList.forEach { player ->
-                player.sendMessage(Text.literal("${displayedProgress?.getProgress()}"), true)
+                player.sendMessage(Text.literal("${displayedProgress?.getProgress()?.times(100)?.toInt()}%"), true)
             }
         }
     }
