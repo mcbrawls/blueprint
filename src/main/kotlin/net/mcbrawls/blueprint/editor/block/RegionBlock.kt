@@ -12,11 +12,12 @@ interface RegionBlock {
         fun trySaveRegion(
             world: ServerWorld,
             pos: BlockPos,
+            relativePos: BlockPos,
             state: BlockState,
             regions: MutableMap<String, SerializableRegion>
         ): Boolean {
             if (state.block is PointRegionBlock) {
-                regions["${regions.size}"] = PointRegion(Vec3d.ofCenter(pos))
+                regions["${regions.size}"] = PointRegion(Vec3d.ofCenter(relativePos))
                 return true
             }
 

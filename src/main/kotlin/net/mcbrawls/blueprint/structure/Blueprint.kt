@@ -187,7 +187,7 @@ data class Blueprint(
 
                 // state
                 val state = world.getBlockState(pos)
-                if (!RegionBlock.trySaveRegion(world, pos, state, regions)) {
+                if (!RegionBlock.trySaveRegion(world, pos, relativePos, state, regions)) {
                     if (!state.isAir) {
                         // build palette
                         if (state !in palette) {
