@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper
 import net.mcbrawls.blueprint.command.BlueprintCommand
 import net.mcbrawls.blueprint.command.BlueprintEditorCommand
+import net.mcbrawls.blueprint.editor.block.BlueprintEditorBlocks
 import net.mcbrawls.blueprint.network.BlueprintConfigC2SPacket
 import net.mcbrawls.blueprint.player.BlueprintPlayerData.Companion.blueprintData
 import net.mcbrawls.blueprint.resource.BlueprintManager
@@ -24,6 +25,8 @@ object BlueprintMod : ModInitializer {
 
     override fun onInitialize() {
         logger.info("Initializing $MOD_NAME")
+
+        BlueprintEditorBlocks
 
         // register config packet receiver
         PayloadTypeRegistry.playC2S().register(BlueprintConfigC2SPacket.PACKET_ID, BlueprintConfigC2SPacket.PACKET_CODEC)

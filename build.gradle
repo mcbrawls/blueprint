@@ -81,13 +81,13 @@ loom {
 
     runs {
         authenticatedClient {
-            client()
+            inherit(client)
             name("Minecraft Client (Authenticated)")
             programArg("--msa")
         }
 
         testClient {
-            client()
+            inherit(client)
             name("Minecraft Client (Test)")
             source(sourceSets.testClient)
             runDir("runtest")
@@ -101,7 +101,7 @@ loom {
         }
 
         testServer {
-            server()
+            inherit(server)
             name("Minecraft Server (Test)")
             source(sourceSets.test)
             runDir("runtest")

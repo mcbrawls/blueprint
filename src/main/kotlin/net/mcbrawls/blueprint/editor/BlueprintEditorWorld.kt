@@ -1,6 +1,5 @@
 package net.mcbrawls.blueprint.editor
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup.world
 import net.mcbrawls.blueprint.resource.BlueprintManager
 import net.mcbrawls.blueprint.structure.Blueprint
 import net.minecraft.block.BlockState

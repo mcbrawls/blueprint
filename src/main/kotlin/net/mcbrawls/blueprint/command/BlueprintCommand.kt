@@ -3,7 +3,6 @@ package net.mcbrawls.blueprint.command
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType
-import dev.andante.codex.encodeQuick
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.ModContainer
 import net.fabricmc.loader.api.Version
@@ -13,23 +12,13 @@ import net.mcbrawls.blueprint.BlueprintMod.MOD_NAME
 import net.mcbrawls.blueprint.asExtremeties
 import net.mcbrawls.blueprint.resource.BlueprintManager
 import net.mcbrawls.blueprint.structure.Blueprint
-import net.mcbrawls.blueprint.structure.BlueprintBlockEntity
-import net.mcbrawls.blueprint.structure.PalettedState
-import net.minecraft.block.BlockState
 import net.minecraft.command.argument.BlockPosArgumentType
 import net.minecraft.command.argument.IdentifierArgumentType
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtIo
-import net.minecraft.nbt.NbtOps
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import net.minecraft.util.math.BlockBox
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3i
-import java.nio.file.Path
 
 object BlueprintCommand {
     const val BLUEPRINT_KEY = "blueprint"

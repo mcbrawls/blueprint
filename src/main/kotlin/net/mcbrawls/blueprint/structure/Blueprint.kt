@@ -3,8 +3,7 @@ package net.mcbrawls.blueprint.structure
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import dev.andante.codex.encodeQuick
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup.world
-import net.mcbrawls.blueprint.asExtremeties
+import net.mcbrawls.blueprint.editor.block.RegionBlock
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -181,28 +180,31 @@ data class Blueprint(
             val palette = mutableListOf<BlockState>()
             val blockEntities = mutableListOf<BlueprintBlockEntity>()
             val palettedBlockStates = mutableListOf<PalettedState>()
+            val regions = mutableMapOf<String, SerializableRegion>()
 
             positions.forEach { pos ->
                 val relativePos = pos.subtract(min)
 
                 // state
                 val state = world.getBlockState(pos)
-                if (!state.isAir) {
-                    // build palette
-                    if (state !in palette) {
-                        palette.add(state)
+                if (!RegionBlock.trySaveRegion(world, pos, state, regions)) {
+                    if (!state.isAir) {
+                        // build palette
+                        if (state !in palette) {
+                            palette.add(state)
+                        }
+
+                        // create paletted state
+                        val paletteId = palette.indexOf(state)
+                        palettedBlockStates.add(PalettedState(relativePos, paletteId))
                     }
 
-                    // create paletted state
-                    val paletteId = palette.indexOf(state)
-                    palettedBlockStates.add(PalettedState(relativePos, paletteId))
-                }
-
-                // block entity
-                val blockEntity = world.getBlockEntity(pos)
-                if (blockEntity != null) {
-                    val nbt = blockEntity.createNbt(world.registryManager)
-                    blockEntities.add(BlueprintBlockEntity(relativePos, nbt))
+                    // block entity
+                    val blockEntity = world.getBlockEntity(pos)
+                    if (blockEntity != null) {
+                        val nbt = blockEntity.createNbt(world.registryManager)
+                        blockEntities.add(BlueprintBlockEntity(relativePos, nbt))
+                    }
                 }
             }
 
@@ -211,7 +213,7 @@ data class Blueprint(
             val size = Vec3i(blockBox.blockCountX, blockBox.blockCountZ, blockBox.blockCountZ)
 
             // create blueprint
-            val blueprint = Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), size, mapOf())
+            val blueprint = Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), size, regions)
             val nbt = CODEC.encodeQuick(NbtOps.INSTANCE, blueprint)
 
             // save blueprint

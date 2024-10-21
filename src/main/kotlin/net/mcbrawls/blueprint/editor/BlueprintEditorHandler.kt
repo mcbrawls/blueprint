@@ -1,6 +1,5 @@
 package net.mcbrawls.blueprint.editor
 
-import net.minecraft.command.argument.EntityArgumentType.player
 import net.minecraft.registry.RegistryKey
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
