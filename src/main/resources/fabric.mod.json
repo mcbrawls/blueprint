@@ -46,8 +46,10 @@
     },
 	"depends": {
 		"minecraft": ">=1.21",
-		"fabric-api": ">=0.105",
+		"fabric-api": "*",
 		"fabric-language-kotlin": "*",
-        "codex": "*"
+        "codex": "*",
+		"sgui": "*",
+		"polymer-core": "*"
 	}
 }
