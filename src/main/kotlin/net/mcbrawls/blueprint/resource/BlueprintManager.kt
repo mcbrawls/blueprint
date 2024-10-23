@@ -6,7 +6,6 @@ import dev.andante.codex.encodeQuick
 import net.fabricmc.fabric.api.resource.SimpleResourceReloadListener
 import net.mcbrawls.blueprint.BlueprintMod
 import net.mcbrawls.blueprint.structure.Blueprint
-import net.mcbrawls.blueprint.structure.Blueprint.Companion.CODEC
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtIo
 import net.minecraft.nbt.NbtOps
@@ -77,7 +76,7 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
      * @return the relative path of the blueprint
      */
     fun saveGenerated(server: MinecraftServer, blueprintId: Identifier, blueprint: Blueprint): String {
-        val nbt = CODEC.encodeQuick(NbtOps.INSTANCE, blueprint)
+        val nbt = Blueprint.CODEC.encodeQuick(NbtOps.INSTANCE, blueprint)
 
         // load blueprint
         blueprints[blueprintId] = blueprint
