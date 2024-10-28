@@ -1,6 +1,7 @@
 package net.mcbrawls.blueprint.block.entity
 
 import eu.pb4.polymer.core.api.block.PolymerBlockUtils
+import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.mcbrawls.blueprint.BlueprintMod
 import net.mcbrawls.blueprint.block.BlueprintBlocks
 import net.minecraft.block.entity.BlockEntity
@@ -12,9 +13,9 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.Util
 
 object BlueprintBlockEntityTypes {
-    val REGION_ID = register("region_id", BlockEntityType.Builder.create(::RegionIdBlockEntity, BlueprintBlocks.POINT_REGION))
+    val REGION_ID = register("region_id", FabricBlockEntityTypeBuilder.create(::RegionIdBlockEntity, BlueprintBlocks.POINT_REGION))
 
-    private fun <T : BlockEntity> register(id: String, builder: BlockEntityType.Builder<T>): BlockEntityType<T> {
+    private fun <T : BlockEntity> register(id: String, builder: FabricBlockEntityTypeBuilder<T>): BlockEntityType<T> {
         val identifier = Identifier.of(BlueprintMod.MOD_ID, id)
         val datafixType = Util.getChoiceType(TypeReferences.BLOCK_ENTITY, identifier.toString());
         val type = builder.build(datafixType)

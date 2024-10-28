@@ -58,7 +58,7 @@ object BlueprintEditorHandler {
             val posDiff = maxPos.subtract(minPos)
             val pos = BlockPos((minPos.x + posDiff.x / 2), (minPos.y + posDiff.y / 2), (minPos.z + posDiff.z / 2))
             val vec = Vec3d.ofBottomCenter(pos)
-            player.teleport(world, vec.x, vec.y, vec.z, 0.0f, 0.0f)
+            player.teleport(world, vec.x, vec.y, vec.z, setOf(), 0.0f, 0.0f, true)
 
             player.changeGameMode(GameMode.SPECTATOR)
         }

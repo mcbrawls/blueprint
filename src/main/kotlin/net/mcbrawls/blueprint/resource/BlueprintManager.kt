@@ -16,7 +16,6 @@ import net.minecraft.resource.ResourceManager
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import net.minecraft.util.WorldSavePath
-import net.minecraft.util.profiler.Profiler
 import net.minecraft.world.level.storage.LevelStorage
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -103,7 +102,6 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
     @OptIn(ExperimentalPathApi::class)
     override fun load(
         manager: ResourceManager,
-        profiler: Profiler,
         executor: Executor
     ): CompletableFuture<Map<Identifier, Blueprint>> {
         return CompletableFuture.supplyAsync {
@@ -202,7 +200,6 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
     override fun apply(
         data: Map<Identifier, Blueprint>,
         manager: ResourceManager,
-        profiler: Profiler,
         executor: Executor
     ): CompletableFuture<Void> {
         return CompletableFuture.runAsync {

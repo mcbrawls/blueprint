@@ -11,6 +11,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
+import xyz.nucleoid.packettweaker.PacketContext
 
 class PointRegionBlock(settings: Settings) : RegionBlock(settings), PolymerBlock {
     override fun saveRegion(
@@ -22,7 +23,7 @@ class PointRegionBlock(settings: Settings) : RegionBlock(settings), PolymerBlock
         return PointRegion(Vec3d.of(relativePos))
     }
 
-    override fun getPolymerBlockState(state: BlockState): BlockState {
+    override fun getPolymerBlockState(state: BlockState, context: PacketContext): BlockState {
         return Blocks.YELLOW_WOOL.defaultState
     }
 
