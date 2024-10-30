@@ -151,6 +151,20 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+
+            pom {
+                name = "Blueprint"
+                description = "A library and development interface for creating reusable structures."
+                url = "https://mcbrawls.net"
+
+                licenses {
+                    license {
+                        name = "MIT"
+                        url = "https://opensource.org/licenses/MIT"
+                        distribution = "repo"
+                    }
+                }
+            }
         }
     }
 
