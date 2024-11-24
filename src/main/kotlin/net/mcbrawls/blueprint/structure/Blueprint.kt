@@ -148,10 +148,10 @@ data class Blueprint(
         val EMPTY = Blueprint(emptyList(), emptyList(), emptyMap(), Vec3i.ZERO, emptyMap())
 
         /**
-         * Flattens a set of placed blueprint futures into one progressive future.
+         * Flattens a set of progressive futures into one progressive future.
          * @return a progressive future of combined futures and progress provider
          */
-        fun flattenFutures(vararg futures: ProgressiveFuture<PlacedBlueprint>): ProgressiveFuture<*> {
+        fun flattenFutures(vararg futures: ProgressiveFuture<*>): ProgressiveFuture<*> {
             // create compounded future
             val future = CompletableFuture.runAsync {
                 val completableFutures = futures.map(ProgressiveFuture<*>::future)
