@@ -71,7 +71,6 @@ dependencies {
 }
 
 loom {
-    runtimeOnlyLog4j = true
     accessWidenerPath = file("src/main/resources/${mod_id}.accesswidener")
 
     mods {

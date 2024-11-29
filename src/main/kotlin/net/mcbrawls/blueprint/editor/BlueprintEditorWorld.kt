@@ -80,7 +80,7 @@ class BlueprintEditorWorld(
      * Calculates the total bounding box of the Blueprint within the world.
      * @return a pair of min/max positions
      */
-    fun getBlueprintBoundingBox(): Pair<BlockPos, BlockPos> {
+    fun getRoughBlueprintBoundingBox(): Pair<BlockPos, BlockPos> {
         var furthestMin = BlockPos(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE)
         var furthestMax = BlockPos(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE)
 
@@ -109,7 +109,7 @@ class BlueprintEditorWorld(
      * Saves the built Blueprint to disk.
      */
     fun saveBlueprint(): String {
-        val (min, max) = getBlueprintBoundingBox()
+        val (min, max) = getRoughBlueprintBoundingBox()
         return Blueprint.save(this, min, max, blueprintId)
     }
 

@@ -37,15 +37,15 @@ data class Blueprint(
     val blockEntities: Map<BlockPos, BlueprintBlockEntity>,
 
     /**
-     * The size of the blueprint.
-     */
-    val size: Vec3i,
-
-    /**
      * The regions stored within this blueprint.
      */
     val regions: Map<String, SerializableRegion>
 ) {
+    /**
+     * The size of the blueprint.
+     */
+    val size: Vec3i = calculateBlueprintSize(palettedBlockStates.map(PalettedState::blockPos))
+
     /**
      * The centre of this blueprint.
      */
@@ -132,9 +132,6 @@ data class Blueprint(
                     .xmap({ entry -> entry.associateBy(BlueprintBlockEntity::blockPos) }, { map -> map.values.toList() })
                     .orElseGet(::emptyMap)
                     .forGetter(Blueprint::blockEntities),
-                Vec3i.CODEC
-                    .fieldOf("size")
-                    .forGetter(Blueprint::size),
                 Codec.unboundedMap(Codec.STRING, SerializableRegion.CODEC)
                     .fieldOf("regions")
                     .orElseGet(::emptyMap)
@@ -145,7 +142,7 @@ data class Blueprint(
         /**
          * An entirely empty blueprint.
          */
-        val EMPTY = Blueprint(emptyList(), emptyList(), emptyMap(), Vec3i.ZERO, emptyMap())
+        val EMPTY = Blueprint(emptyList(), emptyList(), emptyMap(), emptyMap())
 
         /**
          * Flattens a set of progressive futures into one progressive future.
@@ -210,8 +207,28 @@ data class Blueprint(
             val size = Vec3i(blockBox.blockCountX, blockBox.blockCountZ, blockBox.blockCountZ)
 
             // create blueprint
-            val blueprint = Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), size, regions)
+            val blueprint = Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), regions)
             return BlueprintManager.saveGenerated(world.server, blueprintId, blueprint)
+        }
+
+        /**
+         * Calculates the size of a blueprint from its positions.
+         * @return the blueprint size
+         */
+        fun calculateBlueprintSize(positions: List<BlockPos>): BlockPos {
+            if (positions.isEmpty()) {
+                return BlockPos.ORIGIN
+            }
+
+            val minX = positions.minOf { it.x }
+            val minY = positions.minOf { it.y }
+            val minZ = positions.minOf { it.z }
+
+            val maxX = positions.maxOf { it.x }
+            val maxY = positions.maxOf { it.y }
+            val maxZ = positions.maxOf { it.z }
+
+            return BlockPos(maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1)
         }
     }
 }

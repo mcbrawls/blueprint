@@ -26,20 +26,38 @@ object BlueprintTest : ModInitializer {
             dispatcher.register(
                 CommandManager.literal("blueprint-test")
                     .executes { context ->
-                        val b = Blueprint(emptyList(), emptyList(), emptyMap(), Vec3i.ZERO, mapOf("point" to PointRegion(Vec3d.ZERO), "cuboid" to CuboidRegion(Vec3d.ZERO, Vec3d.ZERO)))
-                        println(Blueprint.CODEC.encodeQuick(NbtOps.INSTANCE, b))
+                        runCatching {
+                            val b = Blueprint(
+                                emptyList(),
+                                emptyList(),
+                                emptyMap(),
+                                mapOf(
+                                    "point" to PointRegion(Vec3d.ZERO),
+                                    "cuboid" to CuboidRegion(Vec3d.ZERO, Vec3d.ZERO)
+                                )
+                            )
+                            println(Blueprint.CODEC.encodeQuick(NbtOps.INSTANCE, b))
 
-                        val pos = context.source.position
-                        val blockPos = BlockPos.ofFloored(pos)
-                        val (future, progress) = BlueprintManager[Identifier.of(BlueprintMod.MOD_ID, "test")]!!.placeWithProgress(context.source.world, blockPos)
-                        if (displayedProgress == null) {
-                            displayedProgress = progress
-                        }
-                        future.thenRun {
-                            if (displayedProgress === progress) {
-                                displayedProgress = null
+                            //
+
+                            val pos = context.source.position
+                            val blockPos = BlockPos.ofFloored(pos)
+                            val (future, progress) = BlueprintManager[Identifier.of(
+                                BlueprintMod.MOD_ID,
+                                "test"
+                            )]!!.placeWithProgress(context.source.world, blockPos)
+
+                            if (displayedProgress == null) {
+                                displayedProgress = progress
                             }
-                        }
+                            future.thenAccept { blueprint ->
+                                if (displayedProgress === progress) {
+                                    displayedProgress = null
+                                }
+
+                                println(blueprint.blueprint.size)
+                            }
+                        }.exceptionOrNull()?.printStackTrace()
                         1
                     }
             )
