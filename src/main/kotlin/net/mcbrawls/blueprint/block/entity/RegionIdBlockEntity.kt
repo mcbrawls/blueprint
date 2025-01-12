@@ -1,13 +1,13 @@
 package net.mcbrawls.blueprint.block.entity
 
+import net.mcbrawls.blueprint.structure.Blueprint
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtElement
 import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.math.BlockPos
-import java.nio.charset.StandardCharsets
-import java.util.UUID
+import net.minecraft.util.math.Vec3d
 
 class RegionIdBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BlueprintBlockEntityTypes.REGION_ID, pos, state) {
     var id: String? = null
@@ -16,19 +16,10 @@ class RegionIdBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Bluepr
      * Gets the stored identifier or creates one from the block entity's world key and position.
      * @return a region id
      */
-    fun getOrCreateRegionId(): String {
-        // return stored
+    fun getOrCreateId(): String {
         id?.also { return it }
 
-        // create custom
-        val world = world ?: throw IllegalStateException("World not set")
-        val key = world.registryKey
-        val worldId = key.value
-
-        val data = worldId.toString() + pos.toShortString()
-        val uuid = UUID.nameUUIDFromBytes(data.toByteArray(StandardCharsets.UTF_8))
-
-        return uuid.toString()
+        return Blueprint.createUniqueId(world ?: throw IllegalStateException("World not set"), Vec3d.of(pos))
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {

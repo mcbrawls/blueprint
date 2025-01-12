@@ -1,4 +1,6 @@
 pluginManagement {
+	mod_id
+
 	repositories {
 		maven {
 			name = "Fabric"
@@ -13,4 +15,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "blueprint"
+rootProject.name = mod_id

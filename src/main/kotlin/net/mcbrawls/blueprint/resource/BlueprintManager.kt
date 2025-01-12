@@ -3,6 +3,7 @@ package net.mcbrawls.blueprint.resource
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import dev.andante.codex.encodeQuick
+import kotlinx.io.IOException
 import net.fabricmc.fabric.api.resource.SimpleResourceReloadListener
 import net.mcbrawls.blueprint.BlueprintMod
 import net.mcbrawls.blueprint.structure.Blueprint
@@ -71,15 +72,26 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
     }
 
     /**
+     * Saves a generated blueprint to the disk.
+     * @return the generated nbt
+     */
+    @Throws(IOException::class)
+    fun save(file: File, blueprint: Blueprint): NbtCompound {
+        val nbt = Blueprint.CODEC.encodeQuick(NbtOps.INSTANCE, blueprint) as? NbtCompound
+            ?: throw IllegalStateException("Nbt was not expected compound type")
+
+        file.parentFile.mkdirs()
+        NbtIo.writeCompressed(nbt, file.outputStream())
+
+        return nbt
+    }
+
+    /**
      * Saves a generated blueprint to the disk and loads it.
      * @return the relative path of the blueprint
      */
+    @Throws(IOException::class)
     fun saveGenerated(server: MinecraftServer, blueprintId: Identifier, blueprint: Blueprint): String {
-        val nbt = Blueprint.CODEC.encodeQuick(NbtOps.INSTANCE, blueprint)
-
-        // load blueprint
-        blueprints[blueprintId] = blueprint
-
         // save blueprint
         val blueprintNamespace = blueprintId.namespace
         val blueprintPath = blueprintId.path
@@ -88,8 +100,10 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
         val generatedDirectory = session.getDirectory(WorldSavePath.GENERATED)
         val path = generatedDirectory.resolve("$blueprintNamespace/blueprints/$blueprintPath.nbt")
 
-        path.parent.toFile().mkdirs()
-        NbtIo.writeCompressed(nbt as NbtCompound, path)
+        save(path.toFile(), blueprint)
+
+        // load blueprint
+        blueprints[blueprintId] = blueprint
 
         val relativePath = path
             .relativeTo(generatedDirectory)

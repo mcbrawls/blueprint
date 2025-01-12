@@ -2,17 +2,27 @@ package net.mcbrawls.blueprint.structure
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
-import net.mcbrawls.blueprint.editor.block.RegionBlock
+import net.mcbrawls.blueprint.anchor.Anchor
+import net.mcbrawls.blueprint.block.region.RegionBlock
+import net.mcbrawls.blueprint.entity.AnchorEntity
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
-import net.mcbrawls.blueprint.resource.BlueprintManager
+import net.mcbrawls.slate.Slate.Companion.slate
+import net.mcbrawls.slate.tile.Tile.Companion.tile
+import net.mcbrawls.slate.tile.TileGrid
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.screen.ScreenHandlerType
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockBox
+import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import net.minecraft.world.World
+import java.nio.charset.StandardCharsets
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.BiConsumer
@@ -39,7 +49,12 @@ data class Blueprint(
     /**
      * The regions stored within this blueprint.
      */
-    val regions: Map<String, SerializableRegion>
+    val regions: Map<String, SerializableRegion>,
+
+    /**
+     * The anchors stored within this blueprint.
+     */
+    val anchors: Map<String, Anchor>,
 ) {
     /**
      * The size of the blueprint.
@@ -135,14 +150,18 @@ data class Blueprint(
                 Codec.unboundedMap(Codec.STRING, SerializableRegion.CODEC)
                     .fieldOf("regions")
                     .orElseGet(::emptyMap)
-                    .forGetter(Blueprint::regions)
+                    .forGetter(Blueprint::regions),
+                Codec.unboundedMap(Codec.STRING, Anchor.CODEC)
+                    .fieldOf("anchors")
+                    .orElseGet(::emptyMap)
+                    .forGetter(Blueprint::anchors),
             ).apply(instance, ::Blueprint)
         }
 
         /**
          * An entirely empty blueprint.
          */
-        val EMPTY = Blueprint(emptyList(), emptyList(), emptyMap(), emptyMap())
+        val EMPTY = Blueprint(emptyList(), emptyList(), emptyMap(), emptyMap(), emptyMap())
 
         /**
          * Flattens a set of progressive futures into one progressive future.
@@ -166,7 +185,7 @@ data class Blueprint(
             return ProgressiveFuture(future, provider)
         }
 
-        fun save(world: ServerWorld, min: BlockPos, max: BlockPos, blueprintId: Identifier): String {
+        fun save(world: ServerWorld, min: BlockPos, max: BlockPos): Blueprint {
             // list positions
             val positions = BlockPos.iterate(min, max)
 
@@ -202,13 +221,16 @@ data class Blueprint(
                 }
             }
 
-            // create size
-            val blockBox = BlockBox(min.x, min.y, min.z, max.x, max.y, max.z)
-            val size = Vec3i(blockBox.blockCountX, blockBox.blockCountZ, blockBox.blockCountZ)
+            // create anchors
+            val anchors = mutableMapOf<String, Anchor>()
+            world.iterateEntities().filterIsInstance<AnchorEntity>().forEach { anchorEntity ->
+                val id = anchorEntity.getOrCreateId()
+                val anchor = anchorEntity.createAnchor()
+                anchors[id] = anchor
+            }
 
             // create blueprint
-            val blueprint = Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), regions)
-            return BlueprintManager.saveGenerated(world.server, blueprintId, blueprint)
+            return Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), regions, anchors)
         }
 
         /**
@@ -229,6 +251,45 @@ data class Blueprint(
             val maxZ = positions.maxOf { it.z }
 
             return BlockPos(maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1)
+        }
+
+        /**
+         * Creates a storable identifier from the world key and position.
+         * @return an id
+         */
+        fun createUniqueId(world: World, pos: Vec3d): String {
+            val key = world.registryKey
+            val worldId = key.value
+
+            val data = worldId.toString() + pos.hashCode().toString()
+            val uuid = UUID.nameUUIDFromBytes(data.toByteArray(StandardCharsets.UTF_8))
+
+            return uuid.toString()
+        }
+
+        fun openInputGui(player: ServerPlayerEntity, slateTitle: Text, initialInput: String, closeCallback: (input: String) -> Unit) {
+            slate {
+                tiles = TileGrid.create(ScreenHandlerType.ANVIL)
+                title = slateTitle
+
+                tiles {
+                    this[0] = tile(Items.PAPER) {
+                        tooltip(initialInput)
+                    }
+                }
+
+                callbacks {
+                    var input = initialInput
+
+                    onInput { _, _, newInput ->
+                        input = newInput
+                    }
+
+                    onClose { slate, player ->
+                        closeCallback.invoke(input)
+                    }
+                }
+            }.open(player)
         }
     }
 }

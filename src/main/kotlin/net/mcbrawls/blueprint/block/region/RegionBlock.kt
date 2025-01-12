@@ -1,8 +1,8 @@
-package net.mcbrawls.blueprint.editor.block
+package net.mcbrawls.blueprint.block.region
 
 import net.mcbrawls.blueprint.block.entity.RegionIdBlockEntity
-import net.mcbrawls.blueprint.editor.gui.RegionIdInputGui
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
+import net.mcbrawls.blueprint.structure.Blueprint.Companion.openInputGui
 import net.minecraft.block.BlockState
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
@@ -81,13 +81,13 @@ abstract class RegionBlock(settings: Settings) : BlockWithEntity(settings) {
             pos: BlockPos,
             relativePos: BlockPos,
             state: BlockState,
-            regions: MutableMap<String, SerializableRegion>
+            regions: MutableMap<String, SerializableRegion>,
         ): Boolean {
             val block = state.block
             if (block is RegionBlock) {
                 val blockEntity = world.getBlockEntity(pos)
                 if (blockEntity is RegionIdBlockEntity) {
-                    val regionId = blockEntity.getOrCreateRegionId()
+                    val regionId = blockEntity.getOrCreateId()
                     val region = block.saveRegion(world, pos, relativePos, blockEntity)
                     regions[regionId] = region
                 }
@@ -102,26 +102,19 @@ abstract class RegionBlock(settings: Settings) : BlockWithEntity(settings) {
          * Opens the region id editor gui for a given region id block entity.
          */
         fun openRegionIdEditorGui(player: ServerPlayerEntity, blockEntity: RegionIdBlockEntity) {
-            val regionId = blockEntity.getOrCreateRegionId()
-
-            val gui = RegionIdInputGui(player) { gui, input ->
+            val regionId = blockEntity.getOrCreateId()
+            openInputGui(player, Text.literal("Region ID"), regionId) { input ->
                 if (input != regionId) {
                     if (input.isBlank()) {
                         val id = blockEntity.id
-                        gui.player.sendMessage(Text.literal("No region ID set. Still: \"$id\"").formatted(Formatting.RED))
+                        player.sendMessage(Text.literal("No region ID set. Still: \"$id\"").formatted(Formatting.RED))
                     } else {
                         val processedInput = input.trim()
                         blockEntity.id = processedInput
-                        gui.player.sendMessage(Text.literal("Set region ID: \"$processedInput\"").formatted(Formatting.GREEN))
+                        player.sendMessage(Text.literal("Set region ID: \"$processedInput\"").formatted(Formatting.GREEN))
                     }
                 }
-
-                true
             }
-
-            gui.setDefaultInputValue(regionId)
-
-            gui.open()
         }
     }
 }

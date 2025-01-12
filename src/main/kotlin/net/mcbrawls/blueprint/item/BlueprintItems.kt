@@ -13,6 +13,7 @@ import net.minecraft.util.Identifier
 
 object BlueprintItems {
     val POINT_REGION = register("point_region") { settings -> PolymerBlockItem(BlueprintBlocks.POINT_REGION, settings, Items.YELLOW_WOOL) }
+    val ANCHOR = register("anchor", Item.Settings().maxCount(1), ::AnchorItem)
 
     private fun register(id: String, settings: Item.Settings = Item.Settings(), factory: (Item.Settings) -> Item): Item {
         return register(RegistryKey.of(RegistryKeys.ITEM, Identifier.of(BlueprintMod.MOD_ID, id)), settings, factory)

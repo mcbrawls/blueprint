@@ -5,6 +5,7 @@ import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.mcbrawls.blueprint.BlueprintMod
+import net.mcbrawls.blueprint.anchor.Anchor
 import net.mcbrawls.blueprint.region.CuboidRegion
 import net.mcbrawls.blueprint.region.PointRegion
 import net.mcbrawls.blueprint.resource.BlueprintManager
@@ -15,8 +16,8 @@ import net.minecraft.server.command.CommandManager
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
 
 object BlueprintTest : ModInitializer {
     private var displayedProgress: ProgressProvider? = null
@@ -34,6 +35,9 @@ object BlueprintTest : ModInitializer {
                                 mapOf(
                                     "point" to PointRegion(Vec3d.ZERO),
                                     "cuboid" to CuboidRegion(Vec3d.ZERO, Vec3d.ZERO)
+                                ),
+                                mapOf(
+                                    "test" to Anchor(Vec3d(10.0, 2.0, 1.0), Vec2f(90.0f, 0.0f), "Custom data, anything here!"),
                                 )
                             )
                             println(Blueprint.CODEC.encodeQuick(NbtOps.INSTANCE, b))

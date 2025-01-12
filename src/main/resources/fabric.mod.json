@@ -49,7 +49,7 @@
 		"fabric-api": "*",
 		"fabric-language-kotlin": "*",
         "codex": "*",
-		"sgui": "*",
+        "slate": "*",
 		"polymer-core": "*"
 	}
 }

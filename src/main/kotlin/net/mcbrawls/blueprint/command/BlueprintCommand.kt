@@ -62,8 +62,6 @@ object BlueprintCommand {
     }
 
     private fun executeSave(context: CommandContext<ServerCommandSource>): Int {
-        val world = context.source.world
-
         // gather arguments
         val blueprintId = IdentifierArgumentType.getIdentifier(context, BLUEPRINT_KEY)
 
@@ -74,7 +72,9 @@ object BlueprintCommand {
         val (min, max) = inputStartPosition.asExtremeties(inputEndPosition)
 
         // save
-        val pathString = Blueprint.save(world, min, max, blueprintId)
+        val source = context.source
+        val blueprint = Blueprint.save(source.world, min, max)
+        val pathString = BlueprintManager.saveGenerated(source.server, blueprintId, blueprint)
 
         // feedback
         context.source.sendFeedback({ Text.literal("Saved blueprint to \"$pathString\"") }, true)

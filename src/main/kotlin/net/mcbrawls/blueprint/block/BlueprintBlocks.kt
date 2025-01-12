@@ -1,7 +1,7 @@
 package net.mcbrawls.blueprint.block
 
 import net.mcbrawls.blueprint.BlueprintMod
-import net.mcbrawls.blueprint.editor.block.PointRegionBlock
+import net.mcbrawls.blueprint.block.region.PointRegionBlock
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.registry.Registries

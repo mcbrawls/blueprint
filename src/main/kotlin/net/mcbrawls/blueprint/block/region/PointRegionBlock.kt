@@ -1,4 +1,4 @@
-package net.mcbrawls.blueprint.editor.block
+package net.mcbrawls.blueprint.block.region
 
 import com.mojang.serialization.MapCodec
 import eu.pb4.polymer.core.api.block.PolymerBlock

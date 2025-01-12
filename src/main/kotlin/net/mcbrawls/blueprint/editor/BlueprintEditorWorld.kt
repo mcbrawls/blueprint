@@ -20,6 +20,8 @@ class BlueprintEditorWorld(
     key: RegistryKey<World>,
     config: RuntimeWorldConfig
 ) : RuntimeWorld(server, key, config, Style.TEMPORARY) {
+    val sourceBlueprint: Blueprint? get() = BlueprintManager[blueprintId]
+
     private var minX = BLUEPRINT_PLACEMENT_POS.x
     private var minY = BLUEPRINT_PLACEMENT_POS.y
     private var minZ = BLUEPRINT_PLACEMENT_POS.z
@@ -36,7 +38,7 @@ class BlueprintEditorWorld(
      * @return whether this created a new blueprint
      */
     internal fun initializeBlueprint(): Boolean {
-        val blueprint = BlueprintManager[blueprintId]
+        val blueprint = sourceBlueprint
         return if (blueprint != null) {
             val size = blueprint.size
             maxX += size.x
@@ -110,7 +112,23 @@ class BlueprintEditorWorld(
      */
     fun saveBlueprint(): String {
         val (min, max) = getRoughBlueprintBoundingBox()
-        return Blueprint.save(this, min, max, blueprintId)
+
+        val generatedBlueprint = Blueprint.save(this, min, max).let { generatedBlueprint ->
+            val blueprint = sourceBlueprint
+            if (blueprint != null) {
+                Blueprint(
+                    generatedBlueprint.palette,
+                    generatedBlueprint.palettedBlockStates,
+                    generatedBlueprint.blockEntities,
+                    blueprint.regions + generatedBlueprint.regions,
+                    blueprint.anchors + generatedBlueprint.anchors,
+                )
+            } else {
+                generatedBlueprint
+            }
+        }
+
+        return BlueprintManager.saveGenerated(server, blueprintId, generatedBlueprint)
     }
 
     companion object {

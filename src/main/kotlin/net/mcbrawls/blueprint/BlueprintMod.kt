@@ -9,6 +9,7 @@ import net.mcbrawls.blueprint.block.BlueprintBlocks
 import net.mcbrawls.blueprint.block.entity.BlueprintBlockEntityTypes
 import net.mcbrawls.blueprint.command.BlueprintCommand
 import net.mcbrawls.blueprint.command.BlueprintEditorCommand
+import net.mcbrawls.blueprint.entity.BlueprintEntityTypes
 import net.mcbrawls.blueprint.item.BlueprintItems
 import net.mcbrawls.blueprint.network.BlueprintConfigC2SPacket
 import net.mcbrawls.blueprint.player.BlueprintPlayerData.Companion.blueprintData
@@ -31,6 +32,7 @@ object BlueprintMod : ModInitializer {
         BlueprintBlocks
         BlueprintItems
         BlueprintBlockEntityTypes
+        BlueprintEntityTypes
 
         // register config packet receiver
         PayloadTypeRegistry.playC2S().register(BlueprintConfigC2SPacket.PACKET_ID, BlueprintConfigC2SPacket.PACKET_CODEC)
