@@ -36,7 +36,7 @@ object BlueprintTest : ModInitializer {
                                     "point" to PointRegion(Vec3d.ZERO),
                                     "cuboid" to CuboidRegion(Vec3d.ZERO, Vec3d.ZERO)
                                 ),
-                                mapOf(
+                                listOf(
                                     "test" to Anchor(Vec3d(10.0, 2.0, 1.0), Vec2f(90.0f, 0.0f), "Custom data, anything here!"),
                                 )
                             )

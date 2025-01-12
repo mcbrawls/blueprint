@@ -2,6 +2,7 @@ package net.mcbrawls.blueprint.structure
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
+import dev.andante.codex.ExtraCodecs
 import net.mcbrawls.blueprint.anchor.Anchor
 import net.mcbrawls.blueprint.block.BlueprintBlocks
 import net.mcbrawls.blueprint.block.entity.RegionIdBlockEntity
@@ -59,7 +60,7 @@ data class Blueprint(
     /**
      * The anchors stored within this blueprint.
      */
-    val anchors: Map<String, Anchor>,
+    val anchors: List<Pair<String, Anchor>>,
 ) {
     /**
      * The size of the blueprint.
@@ -136,7 +137,7 @@ data class Blueprint(
     }
 
     fun placeAnchors(world: ServerWorld, pos: BlockPos) {
-        anchors.forEach { id, anchor ->
+        anchors.forEach { (id, anchor) ->
             BlueprintEntityTypes.ANCHOR.create(world, SpawnReason.COMMAND)?.also { anchorEntity ->
                 anchorEntity.id = id
                 anchorEntity.data = anchor.data
@@ -190,15 +191,18 @@ data class Blueprint(
                 BlueprintBlockEntity.CODEC.listOf()
                     .fieldOf("block_entities")
                     .xmap({ entry -> entry.associateBy(BlueprintBlockEntity::blockPos) }, { map -> map.values.toList() })
-                    .orElseGet(::emptyMap)
+                    .orElse(emptyMap())
                     .forGetter(Blueprint::blockEntities),
                 Codec.unboundedMap(Codec.STRING, SerializableRegion.CODEC)
                     .fieldOf("regions")
-                    .orElseGet(::emptyMap)
+                    .orElse(emptyMap())
                     .forGetter(Blueprint::regions),
-                Codec.unboundedMap(Codec.STRING, Anchor.CODEC)
+                Codec.withAlternative(
+                    ExtraCodecs.nativePair(Codec.STRING.fieldOf("id").codec(), Anchor.CODEC).listOf(),
+                    Codec.unboundedMap(Codec.STRING, Anchor.CODEC).xmap({ it.toList() }, { it.toMap() })
+                )
                     .fieldOf("anchors")
-                    .orElseGet(::emptyMap)
+                    .orElse(emptyList())
                     .forGetter(Blueprint::anchors),
             ).apply(instance, ::Blueprint)
         }
@@ -206,7 +210,7 @@ data class Blueprint(
         /**
          * An entirely empty blueprint.
          */
-        val EMPTY = Blueprint(emptyList(), emptyList(), emptyMap(), emptyMap(), emptyMap())
+        val EMPTY = Blueprint(emptyList(), emptyList(), emptyMap(), emptyMap(), emptyList())
 
         /**
          * Flattens a set of progressive futures into one progressive future.
@@ -267,11 +271,11 @@ data class Blueprint(
             }
 
             // create anchors
-            val anchors = mutableMapOf<String, Anchor>()
+            val anchors = mutableListOf<Pair<String, Anchor>>()
             world.iterateEntities().filterIsInstance<AnchorEntity>().forEach { anchorEntity ->
                 val id = anchorEntity.getOrCreateId()
                 val anchor = anchorEntity.createAnchor(min)
-                anchors[id] = anchor
+                anchors.add(id to anchor)
             }
 
             // create blueprint
