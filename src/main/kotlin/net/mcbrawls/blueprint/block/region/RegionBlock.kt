@@ -1,6 +1,7 @@
 package net.mcbrawls.blueprint.block.region
 
 import net.mcbrawls.blueprint.block.entity.RegionIdBlockEntity
+import net.mcbrawls.blueprint.editor.BlueprintEditorWorld
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.mcbrawls.blueprint.structure.Blueprint.Companion.openInputGui
 import net.minecraft.block.BlockState
@@ -17,6 +18,7 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.world.WorldView
 
 abstract class RegionBlock(settings: Settings) : BlockWithEntity(settings) {
     abstract fun saveRegion(
@@ -67,6 +69,10 @@ abstract class RegionBlock(settings: Settings) : BlockWithEntity(settings) {
         return ActionResult.PASS
     }
 
+    override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos): Boolean {
+        return world is BlueprintEditorWorld
+    }
+
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity {
         return RegionIdBlockEntity(pos, state)
     }
@@ -103,7 +109,7 @@ abstract class RegionBlock(settings: Settings) : BlockWithEntity(settings) {
          */
         fun openRegionIdEditorGui(player: ServerPlayerEntity, blockEntity: RegionIdBlockEntity) {
             val regionId = blockEntity.getOrCreateId()
-            openInputGui(player, Text.literal("Region ID"), regionId) { input ->
+            openInputGui(player, Text.literal("Set Region ID").formatted(Formatting.BOLD), regionId) { input ->
                 if (input != regionId) {
                     if (input.isBlank()) {
                         val id = blockEntity.id

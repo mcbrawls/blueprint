@@ -2,6 +2,7 @@ package net.mcbrawls.blueprint.entity
 
 import eu.pb4.polymer.core.api.entity.PolymerEntity
 import net.mcbrawls.blueprint.anchor.Anchor
+import net.mcbrawls.blueprint.editor.BlueprintEditorWorld
 import net.mcbrawls.blueprint.structure.Blueprint
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityPose
@@ -36,6 +37,11 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
     }
 
     override fun tick() {
+        if (world !is BlueprintEditorWorld) {
+            discard()
+            return
+        }
+
         super.tick()
 
         val world = world
@@ -59,14 +65,14 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
     }
 
     fun openAnchorIdEditor(player: ServerPlayerEntity) {
-        openInputGui(player, Text.literal("Anchor ID"), getOrCreateId(), "anchor ID") { input, dataName ->
+        openInputGui(player, Text.literal("Set Anchor ID").formatted(Formatting.BOLD), getOrCreateId(), "anchor ID") { input, dataName ->
             id = input.trim()
             player.sendMessage(Text.literal("Set $dataName: \"$id\"").formatted(Formatting.GREEN))
         }
     }
 
     fun openAnchorDataEditor(player: ServerPlayerEntity) {
-        openInputGui(player, Text.literal("Anchor Data"), data ?: "", "data", canBeBlank = true) { input, dataName ->
+        openInputGui(player, Text.literal("Set Anchor Data").formatted(Formatting.BOLD), data ?: "", "data", canBeBlank = true) { input, dataName ->
             data = input.trim()
             player.sendMessage(Text.literal("Set $dataName: \"$data\"").formatted(Formatting.GREEN))
         }

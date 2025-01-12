@@ -1,6 +1,7 @@
 package net.mcbrawls.blueprint.item
 
 import eu.pb4.polymer.core.api.item.PolymerItem
+import net.mcbrawls.blueprint.editor.BlueprintEditorWorld
 import net.mcbrawls.blueprint.entity.BlueprintEntityTypes
 import net.minecraft.entity.SpawnReason
 import net.minecraft.item.Item
@@ -14,17 +15,23 @@ import xyz.nucleoid.packettweaker.PacketContext
 
 class AnchorItem(settings: Settings) : Item(settings), PolymerItem {
     override fun useOnBlock(context: ItemUsageContext): ActionResult {
-        val player = context.player
-        if (player is ServerPlayerEntity) {
-            val world = context.world
-            BlueprintEntityTypes.ANCHOR.create(world, SpawnReason.COMMAND)?.also { anchorEntity ->
-                anchorEntity.setPosition(context.hitPos)
-                anchorEntity.rotate(context.playerYaw, 0.0f)
-                world.spawnEntity(anchorEntity)
-                anchorEntity.openAnchorIdEditor(player)
+        val world = context.world
+        if (world !is BlueprintEditorWorld) {
+            return ActionResult.PASS
+        }
 
-                return ActionResult.SUCCESS
-            }
+        val player = context.player
+        if (player !is ServerPlayerEntity) {
+            return ActionResult.PASS
+        }
+
+        BlueprintEntityTypes.ANCHOR.create(world, SpawnReason.COMMAND)?.also { anchorEntity ->
+            anchorEntity.setPosition(context.hitPos)
+            anchorEntity.rotate(context.playerYaw, 0.0f)
+            world.spawnEntity(anchorEntity)
+            anchorEntity.openAnchorIdEditor(player)
+
+            return ActionResult.SUCCESS
         }
 
         return ActionResult.PASS
