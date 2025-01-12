@@ -3,6 +3,7 @@ package net.mcbrawls.blueprint.structure
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.mcbrawls.blueprint.BlueprintMod.logger
+import net.mcbrawls.blueprint.anchor.Anchor
 import net.mcbrawls.blueprint.region.CompoundRegion
 import net.mcbrawls.blueprint.region.EmptyRegion
 import net.mcbrawls.blueprint.region.PointRegion
@@ -26,7 +27,7 @@ data class PlacedBlueprint(
     /**
      * Where the blueprint was placed in the world.
      */
-    val position: BlockPos
+    val position: BlockPos,
 ) {
     val offset: Vec3d = Vec3d.of(position)
 
@@ -103,6 +104,13 @@ data class PlacedBlueprint(
         val region = getRegion(id) ?: throw IllegalArgumentException("Not a valid region: $id")
         val pointRegion = region as? PointRegion ?: throw IllegalArgumentException("Not a point region: $id")
         return pointRegion.pointPosition
+    }
+
+    /**
+     * Gets a given anchor offset for this placed blueprint.
+     */
+    fun getAnchorOffset(anchor: Anchor): Anchor {
+        return Anchor(anchor.position.add(offset), anchor.rotation, anchor.data)
     }
 
     /**
