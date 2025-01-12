@@ -7,6 +7,7 @@ import net.mcbrawls.blueprint.region.CompoundRegion
 import net.mcbrawls.blueprint.region.EmptyRegion
 import net.mcbrawls.blueprint.region.PointRegion
 import net.mcbrawls.blueprint.region.Region
+import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
@@ -66,14 +67,8 @@ data class PlacedBlueprint(
      * Retrieves a single region from the source blueprint.
      * @return an offset region
      */
-    fun getRegion(key: String): Region {
-        val region = blueprint.regions[key]
-
-        // verify region
-        if (region == null) {
-            logger.warn("Tried to access blueprint region but was not present: $key")
-            return EmptyRegion
-        }
+    fun getRegion(key: String): Region? {
+        val region = blueprint.regions[key] ?: return null
 
         // return offset compound region
         return region.withOffset(offset)
@@ -105,17 +100,9 @@ data class PlacedBlueprint(
      * Gets the position of a point region.
      */
     fun getPointRegionPos(id: String): Vec3d {
-        val region = getRegion(id)
+        val region = getRegion(id) ?: throw IllegalArgumentException("Not a valid region: $id")
         val pointRegion = region as? PointRegion ?: throw IllegalArgumentException("Not a point region: $id")
         return pointRegion.pointPosition
-    }
-
-    /**
-     * Gets the block position of a point region.
-     */
-    fun getPointRegionBlockPos(id: String, function: (Vec3d) -> BlockPos = BlockPos::ofFloored): BlockPos {
-        val pos = getPointRegionPos(id)
-        return function.invoke(pos)
     }
 
     /**
@@ -130,7 +117,7 @@ data class PlacedBlueprint(
      */
     fun clear(world: ServerWorld) {
         forEachPosition { pos ->
-           world.setBlockState(pos, Blocks.AIR.defaultState)
+           world.setBlockState(pos, Blocks.AIR.defaultState, Block.NOTIFY_LISTENERS or Block.FORCE_STATE or Block.NO_REDRAW)
         }
     }
 
