@@ -111,8 +111,8 @@ data class PlacedBlueprint(
      */
     fun getAnchors(id: String): List<Anchor> {
         return blueprint.anchors
-            .filter { it.first == id }
-            .map { it.second }
+            .filter { (testedId, _) -> testedId == id }
+            .map { (_, anchor) -> getAnchorOffset(anchor) }
     }
 
     /**
@@ -128,7 +128,7 @@ data class PlacedBlueprint(
      */
     fun getUniqueAnchorPos(id: String): Vec3d {
         val anchor = getAnchors(id).firstOrNull() ?: throw IllegalArgumentException("Anchor not found: $id")
-        return getAnchorOffset(anchor).position
+        return anchor.position
     }
 
     /**
