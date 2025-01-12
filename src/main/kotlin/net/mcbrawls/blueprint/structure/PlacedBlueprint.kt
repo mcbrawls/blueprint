@@ -107,10 +107,28 @@ data class PlacedBlueprint(
     }
 
     /**
+     * Gets all anchors of a given id.
+     */
+    fun getAnchors(id: String): List<Anchor> {
+        return blueprint.anchors
+            .filter { it.first == id }
+            .map { it.second }
+    }
+
+    /**
      * Gets a given anchor offset for this placed blueprint.
      */
     fun getAnchorOffset(anchor: Anchor): Anchor {
         return Anchor(anchor.position.add(offset), anchor.rotation, anchor.data)
+    }
+
+    /**
+     * Gets an anchor position from an anchor id assumed to be unique.
+     * @return the placed offset position of the given anchor
+     */
+    fun getUniqueAnchorPos(id: String): Vec3d {
+        val anchor = getAnchors(id).firstOrNull() ?: throw IllegalArgumentException("Anchor not found: $id")
+        return getAnchorOffset(anchor).position
     }
 
     /**
