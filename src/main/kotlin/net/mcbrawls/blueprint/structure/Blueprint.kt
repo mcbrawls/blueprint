@@ -3,14 +3,19 @@ package net.mcbrawls.blueprint.structure
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.mcbrawls.blueprint.anchor.Anchor
+import net.mcbrawls.blueprint.block.BlueprintBlocks
+import net.mcbrawls.blueprint.block.entity.RegionIdBlockEntity
 import net.mcbrawls.blueprint.block.region.RegionBlock
 import net.mcbrawls.blueprint.entity.AnchorEntity
+import net.mcbrawls.blueprint.entity.BlueprintEntityTypes
+import net.mcbrawls.blueprint.region.PointRegion
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.mcbrawls.slate.Slate.Companion.slate
 import net.mcbrawls.slate.tile.Tile.Companion.tile
 import net.mcbrawls.slate.tile.TileGrid
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.entity.SpawnReason
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.screen.ScreenHandlerType
@@ -100,6 +105,46 @@ data class Blueprint(
         }
 
         return ProgressiveFuture(future, ProgressProvider(progress::get))
+    }
+
+    /**
+     * Places creator markers in the world from this blueprint.
+     */
+    fun placeCreatorMarkers(world: ServerWorld, pos: BlockPos) {
+        placeRegions(world, pos)
+        placeAnchors(world, pos)
+    }
+
+    fun placeRegions(world: ServerWorld, pos: BlockPos) {
+        regions.forEach { id, region ->
+            if (region !is PointRegion) {
+                return@forEach
+            }
+
+            val offset = BlockPos.ofFloored(region.pointPosition)
+            placePointRegion(world, pos.add(offset), id)
+        }
+    }
+
+    fun placePointRegion(world: ServerWorld, pos: BlockPos, id: String) {
+        val state = BlueprintBlocks.POINT_REGION.defaultState
+        world.setBlockState(pos, state)
+
+        val blockEntity = RegionIdBlockEntity(pos, state)
+        blockEntity.id = id
+        world.addBlockEntity(blockEntity)
+    }
+
+    fun placeAnchors(world: ServerWorld, pos: BlockPos) {
+        anchors.forEach { id, anchor ->
+            BlueprintEntityTypes.ANCHOR.create(world, SpawnReason.COMMAND)?.also { anchorEntity ->
+                anchorEntity.id = id
+                anchorEntity.data = anchor.data
+                anchorEntity.setPosition(anchor.position.add(Vec3d.of(pos)))
+                anchorEntity.rotate(anchor.rotation.x, anchor.rotation.y)
+                world.spawnEntity(anchorEntity)
+            }
+        }
     }
 
     /**
@@ -225,7 +270,7 @@ data class Blueprint(
             val anchors = mutableMapOf<String, Anchor>()
             world.iterateEntities().filterIsInstance<AnchorEntity>().forEach { anchorEntity ->
                 val id = anchorEntity.getOrCreateId()
-                val anchor = anchorEntity.createAnchor()
+                val anchor = anchorEntity.createAnchor(min)
                 anchors[id] = anchor
             }
 

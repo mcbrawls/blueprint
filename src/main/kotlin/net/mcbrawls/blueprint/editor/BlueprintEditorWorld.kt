@@ -11,6 +11,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import xyz.nucleoid.fantasy.RuntimeWorld
 import xyz.nucleoid.fantasy.RuntimeWorldConfig
+import java.util.function.BooleanSupplier
 import kotlin.math.max
 import kotlin.math.min
 
@@ -46,6 +47,7 @@ class BlueprintEditorWorld(
             maxZ += size.z
 
             blueprint.place(this, BLUEPRINT_PLACEMENT_POS)
+            blueprint.placeCreatorMarkers(this, BLUEPRINT_PLACEMENT_POS)
             false
         } else {
             setBlockState(minPos, Blocks.STONE.defaultState)
@@ -56,25 +58,37 @@ class BlueprintEditorWorld(
     override fun setBlockState(pos: BlockPos, state: BlockState, flags: Int, maxUpdateDepth: Int): Boolean {
         return if (super.setBlockState(pos, state, flags, maxUpdateDepth)) {
             if (!state.isAir) {
-                pos.x.also {
-                    minX = min(minX, it)
-                    maxX = max(maxX, it)
-                }
-
-                pos.y.also {
-                    minY = min(minY, it)
-                    maxY = max(maxY, it)
-                }
-
-                pos.z.also {
-                    minZ = min(minZ, it)
-                    maxZ = max(maxZ, it)
-                }
+                updateExpectedSize(pos)
             }
 
             true
         } else {
             false
+        }
+    }
+
+    override fun tick(shouldKeepTicking: BooleanSupplier) {
+        super.tick(shouldKeepTicking)
+
+        players.forEach { player ->
+            updateExpectedSize(player.blockPos)
+        }
+    }
+
+    private fun updateExpectedSize(pos: BlockPos) {
+        pos.x.also {
+            minX = min(minX, it)
+            maxX = max(maxX, it)
+        }
+
+        pos.y.also {
+            minY = min(minY, it)
+            maxY = max(maxY, it)
+        }
+
+        pos.z.also {
+            minZ = min(minZ, it)
+            maxZ = max(maxZ, it)
         }
     }
 
@@ -112,23 +126,8 @@ class BlueprintEditorWorld(
      */
     fun saveBlueprint(): String {
         val (min, max) = getRoughBlueprintBoundingBox()
-
-        val generatedBlueprint = Blueprint.save(this, min, max).let { generatedBlueprint ->
-            val blueprint = sourceBlueprint
-            if (blueprint != null) {
-                Blueprint(
-                    generatedBlueprint.palette,
-                    generatedBlueprint.palettedBlockStates,
-                    generatedBlueprint.blockEntities,
-                    blueprint.regions + generatedBlueprint.regions,
-                    blueprint.anchors + generatedBlueprint.anchors,
-                )
-            } else {
-                generatedBlueprint
-            }
-        }
-
-        return BlueprintManager.saveGenerated(server, blueprintId, generatedBlueprint)
+        val blueprint = Blueprint.save(this, min, max)
+        return BlueprintManager.saveGenerated(server, blueprintId, blueprint)
     }
 
     companion object {

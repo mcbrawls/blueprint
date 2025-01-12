@@ -15,7 +15,7 @@ object BlueprintEntityTypes {
     val ANCHOR = register(
         "anchor",
         EntityType.Builder.create(::AnchorEntity, SpawnGroup.MISC)
-            .dimensions(0.25f, 0.25f)
+            .dimensions(0.3f, 0.3f)
             .maxTrackingRange(2)
             .trackingTickInterval(10)
             .disableSaving()

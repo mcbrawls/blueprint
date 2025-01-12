@@ -24,7 +24,7 @@ class RegionIdBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Bluepr
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        id?.also { id -> nbt.putString(REGION_ID_KEY, id) }
+        id?.also { nbt.putString(REGION_ID_KEY, it) }
     }
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {

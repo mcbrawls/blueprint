@@ -16,7 +16,7 @@ data class PointRegion(
     /**
      * The position of the point.
      */
-    val pointPosition: Vec3d
+    val pointPosition: Vec3d,
 ) : SerializableRegion(SerializableRegionTypes.POINT) {
     override fun getBlockPositions(offset: Vec3d): Set<BlockPos> {
         return setOf(BlockPos.ofFloored(pointPosition.add(offset)))
