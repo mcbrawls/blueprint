@@ -25,11 +25,11 @@ class AnchorItem(settings: Settings) : Item(settings), PolymerItem {
             return ActionResult.PASS
         }
 
-        BlueprintEntityTypes.ANCHOR.create(world, SpawnReason.COMMAND)?.also { anchorEntity ->
-            anchorEntity.setPosition(context.hitPos)
-            anchorEntity.rotate(context.playerYaw, 0.0f)
-            world.spawnEntity(anchorEntity)
-            anchorEntity.openAnchorIdEditor(player)
+        BlueprintEntityTypes.ANCHOR.create(world, SpawnReason.SPAWN_ITEM_USE)?.also { entity ->
+            entity.setPosition(context.hitPos)
+            entity.rotate(context.playerYaw, 0.0f)
+            world.spawnEntity(entity)
+            entity.openAnchorIdEditor(player)
 
             return ActionResult.SUCCESS
         }

@@ -138,12 +138,12 @@ data class Blueprint(
 
     fun placeAnchors(world: ServerWorld, pos: BlockPos) {
         anchors.forEach { (id, anchor) ->
-            BlueprintEntityTypes.ANCHOR.create(world, SpawnReason.COMMAND)?.also { anchorEntity ->
-                anchorEntity.id = id
-                anchorEntity.data = anchor.data
-                anchorEntity.setPosition(anchor.position.add(Vec3d.of(pos)))
-                anchorEntity.rotate(anchor.rotation.x, anchor.rotation.y)
-                world.spawnEntity(anchorEntity)
+            BlueprintEntityTypes.ANCHOR.create(world, SpawnReason.CHUNK_GENERATION)?.also { entity ->
+                entity.anchorId = id
+                entity.data = anchor.data
+                entity.setPosition(anchor.position.add(Vec3d.of(pos)))
+                entity.rotate(anchor.rotation.x, anchor.rotation.y)
+                world.spawnEntity(entity)
             }
         }
     }

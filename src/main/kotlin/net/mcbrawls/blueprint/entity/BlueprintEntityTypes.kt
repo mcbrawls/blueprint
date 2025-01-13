@@ -18,7 +18,6 @@ object BlueprintEntityTypes {
             .dimensions(0.3f, 0.3f)
             .maxTrackingRange(2)
             .trackingTickInterval(10)
-            .disableSaving()
             .disableSummon()
     )
 

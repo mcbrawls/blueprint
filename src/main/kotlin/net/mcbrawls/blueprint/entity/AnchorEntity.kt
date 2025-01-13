@@ -25,7 +25,7 @@ import net.minecraft.world.World
 import xyz.nucleoid.packettweaker.PacketContext
 
 class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, world), PolymerEntity {
-    var id: String? = null
+    var anchorId: String? = null
     var data: String? = null
 
     init {
@@ -66,8 +66,8 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
 
     fun openAnchorIdEditor(player: ServerPlayerEntity) {
         openInputGui(player, Text.literal("Set Anchor ID").formatted(Formatting.BOLD), getOrCreateId(), "anchor ID") { input, dataName ->
-            id = input.trim()
-            player.sendMessage(Text.literal("Set $dataName: \"$id\"").formatted(Formatting.GREEN))
+            anchorId = input.trim()
+            player.sendMessage(Text.literal("Set $dataName: \"$anchorId\"").formatted(Formatting.GREEN))
         }
     }
 
@@ -82,14 +82,14 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
         discard()
 
         if (attacker is ServerPlayerEntity) {
-            attacker.sendMessage(Text.literal("Removed anchor: id \"$id\", data \"$data\"").formatted(Formatting.RED))
+            attacker.sendMessage(Text.literal("Removed anchor: id \"$anchorId\", data \"$data\"").formatted(Formatting.RED))
         }
 
         return false
     }
 
     fun createAnchor(root: BlockPos): Anchor {
-        return Anchor(pos.subtract(Vec3d.of(root)), Vec2f(pitch, yaw), data)
+        return Anchor(pos.subtract(Vec3d.of(root)), Vec2f(yaw, pitch), data)
     }
 
     /**
@@ -97,7 +97,7 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
      * @return an anchor id
      */
     fun getOrCreateId(): String {
-        id?.also { return it }
+        anchorId?.also { return it }
 
         return Blueprint.Companion.createUniqueId(world ?: throw IllegalStateException("World not set"), pos)
     }
@@ -105,7 +105,7 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
     override fun writeCustomDataToNbt(nbt: NbtCompound) {
         super.writeCustomDataToNbt(nbt)
 
-        id?.also { nbt.putString(ANCHOR_ID_KEY, it) }
+        anchorId?.also { nbt.putString(ANCHOR_ID_KEY, it) }
         data?.also { nbt.putString(DATA_KEY, it) }
     }
 
@@ -113,7 +113,7 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
         super.readCustomDataFromNbt(nbt)
 
         if (nbt.contains(ANCHOR_ID_KEY, NbtElement.STRING_TYPE.toInt())) {
-            id = nbt.getString(ANCHOR_ID_KEY)
+            anchorId = nbt.getString(ANCHOR_ID_KEY)
         }
 
         if (nbt.contains(DATA_KEY, NbtElement.STRING_TYPE.toInt())) {
