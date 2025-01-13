@@ -21,8 +21,8 @@ data class Anchor(
     val rotation: Vec2f,
     val data: String? = null,
 ) {
-    fun placeBlock(world: ServerWorld, state: BlockState) {
-        val pos = BlockPos.ofFloored(position)
+    fun placeBlock(world: ServerWorld, state: BlockState, offset: BlockPos = BlockPos.ORIGIN) {
+        val pos = BlockPos.ofFloored(position).add(offset)
         world.setBlockState(pos, state)
     }
 
