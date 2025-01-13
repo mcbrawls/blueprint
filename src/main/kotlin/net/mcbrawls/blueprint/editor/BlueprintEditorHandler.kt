@@ -35,6 +35,8 @@ object BlueprintEditorHandler {
             ?: run {
                 val handle = fantasy.openTemporaryWorld(
                     RuntimeWorldConfig()
+                        .setMirrorOverworldGameRules(true)
+                        .setMirrorOverworldDifficulty(true)
                         .setGenerator(VoidChunkGenerator(server, BiomeKeys.THE_VOID))
                         .setWorldConstructor { server, key, config, _ -> BlueprintEditorWorld(blueprintId, server, key, config) }
                 )
