@@ -14,6 +14,8 @@ import net.minecraft.text.Text
 
 object BlueprintEditorCommand {
     const val BLUEPRINT_KEY = "blueprint"
+    const val BLUEPRINT_ID_KEY = "blueprint_id"
+
     private val NOT_BLUEPRINT_EDITOR_WORLD_EXCEPTION = SimpleCommandExceptionType(Text.literal("You are not in a Blueprint editor."))
     private val IN_BLUEPRINT_EDITOR_WORLD_EXCEPTION = SimpleCommandExceptionType(Text.literal("You are already in a Blueprint editor. Use /blueprint-editor close to leave."))
 
@@ -36,6 +38,11 @@ object BlueprintEditorCommand {
                 .then(
                     literal("save")
                         .executes(::executeSave)
+                        .then(
+                            argument(BLUEPRINT_ID_KEY, IdentifierArgumentType.identifier())
+                                .suggests { _, suggestions -> BlueprintManager.suggestBlueprints(suggestions) }
+                                .executes(::executeSave)
+                        )
                 )
         )
     }
@@ -68,10 +75,19 @@ object BlueprintEditorCommand {
     }
 
     private fun executeSave(context: CommandContext<ServerCommandSource>): Int {
+        val customBlueprintId = runCatching {
+            IdentifierArgumentType.getIdentifier(context, BLUEPRINT_ID_KEY)
+        }.getOrNull()
+
         val source = context.source
-        val world = source.world as? BlueprintEditorWorld ?: throw NOT_BLUEPRINT_EDITOR_WORLD_EXCEPTION.create()
-        val pathString = world.saveBlueprint()
-        source.sendFeedback({ Text.literal("Saved editor blueprint: \"$pathString\"") }, true)
+        if (customBlueprintId != null) {
+            source.sendFeedback({ Text.literal("Saved editor blueprint as \"$customBlueprintId\"") }, true)
+        } else {
+            val world = source.world as? BlueprintEditorWorld ?: throw NOT_BLUEPRINT_EDITOR_WORLD_EXCEPTION.create()
+            val pathString = world.saveBlueprint()
+            source.sendFeedback({ Text.literal("Saved editor blueprint: \"$pathString\"") }, true)
+        }
+
         return 1
     }
 }
