@@ -124,10 +124,10 @@ class BlueprintEditorWorld(
     /**
      * Saves the built Blueprint to disk.
      */
-    fun saveBlueprint(): String {
+    fun saveBlueprint(id: Identifier? = null): String {
         val (min, max) = getRoughBlueprintBoundingBox()
         val blueprint = Blueprint.save(this, min, max)
-        return BlueprintManager.saveGenerated(server, blueprintId, blueprint)
+        return BlueprintManager.saveGenerated(server, id ?: blueprintId, blueprint)
     }
 
     companion object {

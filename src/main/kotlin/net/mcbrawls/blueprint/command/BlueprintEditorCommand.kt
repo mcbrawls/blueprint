@@ -80,10 +80,11 @@ object BlueprintEditorCommand {
         }.getOrNull()
 
         val source = context.source
+        val world = source.world as? BlueprintEditorWorld ?: throw NOT_BLUEPRINT_EDITOR_WORLD_EXCEPTION.create()
         if (customBlueprintId != null) {
-            source.sendFeedback({ Text.literal("Saved editor blueprint as \"$customBlueprintId\"") }, true)
+            val pathString = world.saveBlueprint(customBlueprintId)
+            source.sendFeedback({ Text.literal("Saved editor blueprint as: \"$pathString\"") }, true)
         } else {
-            val world = source.world as? BlueprintEditorWorld ?: throw NOT_BLUEPRINT_EDITOR_WORLD_EXCEPTION.create()
             val pathString = world.saveBlueprint()
             source.sendFeedback({ Text.literal("Saved editor blueprint: \"$pathString\"") }, true)
         }
