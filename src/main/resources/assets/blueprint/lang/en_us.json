@@ -1,0 +1,7 @@
+{
+    "entity.blueprint.anchor": "Anchor",
+    "block.blueprint.point_region": "Region (Point)",
+    "item.blueprint.anchor": "Anchor",
+    "blueprint.key_category": "Blueprint",
+    "blueprint.key.toggle_anchor_visualisation": "Toggle Anchor Visualisation"
+}

@@ -3,7 +3,8 @@
 	"package": "net.mcbrawls.blueprint.mixin.client",
 	"compatibilityLevel": "JAVA_17",
 	"client": [
-        "IntegratedServerLoaderMixin"
+		"EntityRendererMixin",
+		"IntegratedServerLoaderMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
