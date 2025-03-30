@@ -18,7 +18,6 @@ object BlueprintEntityTypes {
             .dimensions(0.3f, 0.3f)
             .maxTrackingRange(2)
             .trackingTickInterval(10)
-            .disableSummon()
     )
 
     private fun <E : Entity> register(id: String, builder: EntityType.Builder<E>): EntityType<E> {
