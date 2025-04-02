@@ -168,13 +168,13 @@ publishing {
     }
 
     repositories {
-        // Andante's Maven
+        // MC Brawls Maven
         def mavenUsername = ENV["MAVEN_USERNAME_ANDANTE"]
         def mavenPassword = ENV["MAVEN_PASSWORD_ANDANTE"]
         if (mavenUsername && mavenPassword) {
             maven {
-                name = "Andante"
-                url  = "https://maven.andante.dev/releases/"
+                name = "Brawls"
+                url  = "https://maven.mcbrawls.net/releases/"
                 credentials.username = mavenUsername
                 credentials.password = mavenPassword
             }
