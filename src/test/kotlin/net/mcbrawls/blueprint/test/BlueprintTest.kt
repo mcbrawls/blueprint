@@ -10,7 +10,9 @@ import net.mcbrawls.blueprint.region.CuboidRegion
 import net.mcbrawls.blueprint.region.PointRegion
 import net.mcbrawls.blueprint.resource.BlueprintManager
 import net.mcbrawls.blueprint.structure.Blueprint
+import net.mcbrawls.blueprint.structure.BlueprintBatch
 import net.mcbrawls.blueprint.structure.ProgressProvider
+import net.minecraft.block.Blocks
 import net.minecraft.nbt.NbtOps
 import net.minecraft.server.command.CommandManager
 import net.minecraft.text.Text
@@ -60,6 +62,40 @@ object BlueprintTest : ModInitializer {
                                 }
 
                                 println(blueprint.blueprint.size)
+                            }
+                        }.exceptionOrNull()?.printStackTrace()
+                        1
+                    }
+            )
+
+            dispatcher.register(
+                CommandManager.literal("blueprint-test-batch")
+                    .executes { context ->
+                        runCatching {
+                            val pos = context.source.position
+                            val blockPos = BlockPos.ofFloored(pos)
+                            val (future, progress) = BlueprintBatch.place(context.source.world, setOf(
+                                BlueprintBatch.Entry(Identifier.of("blueprint", "anchor"), blockPos),
+                                BlueprintBatch.Entry(Identifier.of("blueprint", "block_entity_test"), blockPos.add(10, 0, 0)),
+                                BlueprintBatch.Entry(Identifier.of("blueprint", "wow"), blockPos.add(20, 0, 0)),
+                                BlueprintBatch.Entry(Identifier.of("blueprint", "test"), blockPos.add(30, 0, 0)) { state ->
+                                    if (state.block == Blocks.STONE) {
+                                        Blocks.WHITE_WOOL.defaultState
+                                    } else {
+                                        state
+                                    }
+                                },
+                            ))
+
+                            if (displayedProgress == null) {
+                                displayedProgress = progress
+                            }
+                            future.thenAccept { blueprint ->
+                                if (displayedProgress === progress) {
+                                    displayedProgress = null
+                                }
+
+                                println(blueprint)
                             }
                         }.exceptionOrNull()?.printStackTrace()
                         1

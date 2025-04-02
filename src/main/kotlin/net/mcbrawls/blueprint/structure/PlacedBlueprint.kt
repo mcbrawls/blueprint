@@ -126,9 +126,8 @@ data class PlacedBlueprint(
      * Gets an anchor position from an anchor id assumed to be unique.
      * @return the placed offset position of the given anchor
      */
-    fun getUniqueAnchorPos(id: String): Vec3d {
-        val anchor = getAnchors(id).firstOrNull() ?: throw IllegalArgumentException("Anchor not found: $id")
-        return anchor.position
+    fun getUniqueAnchor(id: String): Anchor? {
+        return getAnchors(id).firstOrNull()
     }
 
     /**

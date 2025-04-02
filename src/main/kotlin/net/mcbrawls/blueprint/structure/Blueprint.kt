@@ -149,23 +149,6 @@ data class Blueprint(
     }
 
     /**
-     * Places a position's block data to the world.
-     */
-    private fun placePosition(world: ServerWorld, position: BlockPos, offset: BlockPos, state: BlockState, blockEntityNbt: NbtCompound?, processor: BlockStateProcessor?) {
-        val trueState = processor?.process(state) ?: state
-        val truePos = position.add(offset)
-
-        // state
-        world.setBlockState(truePos, trueState, Block.NOTIFY_LISTENERS or Block.FORCE_STATE or Block.NO_REDRAW)
-
-        // block entity
-        if (blockEntityNbt != null) {
-            val blockEntity = world.getBlockEntity(truePos)
-            blockEntity?.read(blockEntityNbt, world.registryManager)
-        }
-    }
-
-    /**
      * Performs the given action for every position in the blueprint.
      */
     fun forEach(action: BiConsumer<BlockPos, Pair<BlockState, NbtCompound?>>) {
@@ -232,6 +215,23 @@ data class Blueprint(
             }
 
             return ProgressiveFuture(future, provider)
+        }
+
+        /**
+         * Places a position's block data to the world.
+         */
+        fun placePosition(world: ServerWorld, position: BlockPos, offset: BlockPos, state: BlockState, blockEntityNbt: NbtCompound?, processor: BlockStateProcessor?) {
+            val trueState = processor?.process(state) ?: state
+            val truePos = position.add(offset)
+
+            // state
+            world.setBlockState(truePos, trueState, Block.NOTIFY_LISTENERS or Block.FORCE_STATE or Block.NO_REDRAW)
+
+            // block entity
+            if (blockEntityNbt != null) {
+                val blockEntity = world.getBlockEntity(truePos)
+                blockEntity?.read(blockEntityNbt, world.registryManager)
+            }
         }
 
         fun save(world: ServerWorld, min: BlockPos, max: BlockPos): Blueprint {
