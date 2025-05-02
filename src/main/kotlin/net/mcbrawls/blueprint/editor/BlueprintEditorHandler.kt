@@ -1,6 +1,8 @@
 package net.mcbrawls.blueprint.editor
 
+import net.mcbrawls.blueprint.BlueprintMod
 import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
@@ -9,6 +11,7 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 import net.minecraft.world.World
 import net.minecraft.world.biome.BiomeKeys
+import net.minecraft.world.dimension.DimensionType
 import xyz.nucleoid.fantasy.Fantasy
 import xyz.nucleoid.fantasy.RuntimeWorldConfig
 import xyz.nucleoid.fantasy.RuntimeWorldHandle
@@ -17,6 +20,8 @@ import xyz.nucleoid.fantasy.util.VoidChunkGenerator
 object BlueprintEditorHandler {
     private val handles: MutableMap<Identifier, RuntimeWorldHandle> = mutableMapOf()
     private val keys: MutableMap<RegistryKey<World>, Identifier> = mutableMapOf()
+
+    private val DIMENSION_KEY: RegistryKey<DimensionType> = RegistryKey.of(RegistryKeys.DIMENSION_TYPE, Identifier.of(BlueprintMod.MOD_ID, "editor"))
 
     /**
      * Opens a Blueprint editor environment.
@@ -38,6 +43,7 @@ object BlueprintEditorHandler {
                         .setMirrorOverworldGameRules(true)
                         .setMirrorOverworldDifficulty(true)
                         .setGenerator(VoidChunkGenerator(server, BiomeKeys.THE_VOID))
+                        .setDimensionType(DIMENSION_KEY)
                         .setWorldConstructor { server, key, config, _ -> BlueprintEditorWorld(blueprintId, server, key, config) }
                 )
 

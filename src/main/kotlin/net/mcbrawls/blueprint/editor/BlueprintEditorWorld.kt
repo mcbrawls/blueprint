@@ -19,7 +19,7 @@ class BlueprintEditorWorld(
     val blueprintId: Identifier,
     server: MinecraftServer,
     key: RegistryKey<World>,
-    config: RuntimeWorldConfig
+    config: RuntimeWorldConfig,
 ) : RuntimeWorld(server, key, config, Style.TEMPORARY) {
     val sourceBlueprint: Blueprint? get() = BlueprintManager[blueprintId]
 
