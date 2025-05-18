@@ -4,7 +4,6 @@ import net.mcbrawls.blueprint.structure.Blueprint
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtElement
 import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
@@ -29,10 +28,7 @@ class RegionIdBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Bluepr
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-
-        if (nbt.contains(REGION_ID_KEY, NbtElement.STRING_TYPE.toInt())) {
-            id = nbt.getString(REGION_ID_KEY)
-        }
+        nbt.getString(REGION_ID_KEY).ifPresent { id = it }
     }
 
     companion object {

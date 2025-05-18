@@ -10,7 +10,6 @@ import net.minecraft.entity.EntityType
 import net.minecraft.entity.decoration.InteractionEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtElement
 import net.minecraft.particle.DustParticleEffect
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -112,13 +111,8 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
     override fun readCustomDataFromNbt(nbt: NbtCompound) {
         super.readCustomDataFromNbt(nbt)
 
-        if (nbt.contains(ANCHOR_ID_KEY, NbtElement.STRING_TYPE.toInt())) {
-            anchorId = nbt.getString(ANCHOR_ID_KEY)
-        }
-
-        if (nbt.contains(DATA_KEY, NbtElement.STRING_TYPE.toInt())) {
-            data = nbt.getString(DATA_KEY)
-        }
+        nbt.getString(ANCHOR_ID_KEY).ifPresent { anchorId = it }
+        nbt.getString(DATA_KEY).ifPresent { data = it }
     }
 
     override fun getPolymerEntityType(context: PacketContext): EntityType<*> {
