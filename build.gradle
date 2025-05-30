@@ -8,7 +8,7 @@ plugins {
 
 def ENV = System.getenv()
 
-version = mod_version
+version = "$mod_version+$minecraft_version"
 group = maven_group
 
 base {

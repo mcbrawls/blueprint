@@ -9,10 +9,11 @@ import net.minecraft.entity.EntityPose
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.decoration.InteractionEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.nbt.NbtCompound
 import net.minecraft.particle.DustParticleEffect
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.storage.ReadView
+import net.minecraft.storage.WriteView
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
@@ -101,18 +102,18 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
         return Blueprint.Companion.createUniqueId(world ?: throw IllegalStateException("World not set"), pos)
     }
 
-    override fun writeCustomDataToNbt(nbt: NbtCompound) {
-        super.writeCustomDataToNbt(nbt)
+    override fun writeCustomData(view: WriteView) {
+        super.writeCustomData(view)
 
-        anchorId?.also { nbt.putString(ANCHOR_ID_KEY, it) }
-        data?.also { nbt.putString(DATA_KEY, it) }
+        anchorId?.also { view.putString(ANCHOR_ID_KEY, it) }
+        data?.also { view.putString(DATA_KEY, it) }
     }
 
-    override fun readCustomDataFromNbt(nbt: NbtCompound) {
-        super.readCustomDataFromNbt(nbt)
+    override fun readCustomData(view: ReadView) {
+        super.readCustomData(view)
 
-        nbt.getString(ANCHOR_ID_KEY).ifPresent { anchorId = it }
-        nbt.getString(DATA_KEY).ifPresent { data = it }
+        view.getOptionalString(ANCHOR_ID_KEY).ifPresent { anchorId = it }
+        view.getOptionalString(DATA_KEY).ifPresent { data = it }
     }
 
     override fun getPolymerEntityType(context: PacketContext): EntityType<*> {
