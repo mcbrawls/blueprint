@@ -3,6 +3,7 @@ package net.mcbrawls.blueprint.structure
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import dev.andante.codex.ExtraCodecs
+import net.mcbrawls.blueprint.BlueprintMod
 import net.mcbrawls.blueprint.anchor.Anchor
 import net.mcbrawls.blueprint.block.BlueprintBlocks
 import net.mcbrawls.blueprint.block.entity.RegionIdBlockEntity
@@ -22,7 +23,9 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.storage.NbtReadView
 import net.minecraft.text.Text
+import net.minecraft.util.ErrorReporter
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
@@ -230,7 +233,7 @@ data class Blueprint(
             // block entity
             if (blockEntityNbt != null) {
                 val blockEntity = world.getBlockEntity(truePos)
-                blockEntity?.read(blockEntityNbt, world.registryManager)
+                blockEntity?.read(NbtReadView.create(ErrorReporter.Logging(BlueprintMod.logger), world.registryManager, blockEntityNbt))
             }
         }
 
