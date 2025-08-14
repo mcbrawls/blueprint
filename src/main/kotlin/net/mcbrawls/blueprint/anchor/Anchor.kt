@@ -26,12 +26,23 @@ data class Anchor(
         world.setBlockState(pos, state)
     }
 
+    fun placeEntity(world: ServerWorld, entity: Entity) {
+        entity.setPosition(position)
+        entity.rotate(rotation.x, rotation.y)
+        world.spawnEntity(entity)
+    }
+
+    fun placeEntity(world: ServerWorld, builder: (data: String?) -> Entity) {
+        val entity = builder.invoke(data)
+        placeEntity(world, entity)
+    }
+
     fun <T : Entity> placeEntity(world: ServerWorld, type: EntityType<T>, builder: (entity: T, data: String?) -> Unit = { _, _ -> }) {
         type.create(world, SpawnReason.CHUNK_GENERATION)?.also { entity ->
-            entity.setPosition(position)
-            entity.rotate(rotation.x, rotation.y)
-            builder.invoke(entity, data)
-            world.spawnEntity(entity)
+            placeEntity(world) { data ->
+                builder.invoke(entity, data)
+                entity
+            }
         }
     }
 
