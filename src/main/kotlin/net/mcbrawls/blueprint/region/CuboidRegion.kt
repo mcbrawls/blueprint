@@ -35,7 +35,7 @@ data class CuboidRegion(
         val endPosition = offsetPosition.add(size)
         val endBox = Box.from(endPosition)
 
-        return rootBox.intersection(endBox)
+        return rootBox.union(endBox)
     }
 
     /**
