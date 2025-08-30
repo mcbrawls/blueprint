@@ -35,7 +35,7 @@ data class SphericalRegion(
     /**
      * Calculates all positions for this spherical region.
      */
-    override fun getBlockPositions(offset: Vec3d): Set<BlockPos> {
+    override fun getBlockPositions(offset: Vec3d): Iterable<BlockPos> {
         // create box
         val diameter = radius * 2
         val box = Box.of(rootPosition.add(offset), diameter, diameter, diameter)
@@ -43,7 +43,7 @@ data class SphericalRegion(
         // iterate through all positions and find all that are within range for a sphere
         val boxPositions = iterateBoxBlockPositions(box)
         val predicate = isPositionWithinRadius(offset)
-        return boxPositions.filter(predicate).toSet()
+        return boxPositions.filter(predicate)
     }
 
     override fun contains(entity: Entity, offset: Vec3d): Boolean {

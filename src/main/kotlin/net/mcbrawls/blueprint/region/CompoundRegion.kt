@@ -34,7 +34,9 @@ data class CompoundRegion(
 
     override fun getBlockPositions(offset: Vec3d): Set<BlockPos> {
         val absoluteOffset = getAbsoluteOffset(offset)
-        val mapped = regions.flatMap { region -> region.getBlockPositions(absoluteOffset) }
+        val mapped = regions
+            .flatMap { region -> region.getBlockPositions(absoluteOffset) }
+            .map(BlockPos::toImmutable)
         return mapped.toSet()
     }
 

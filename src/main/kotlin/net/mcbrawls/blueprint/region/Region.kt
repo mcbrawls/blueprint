@@ -12,7 +12,7 @@ interface Region {
     /**
      * All positions stored within this region.
      */
-    fun getBlockPositions(offset: Vec3d = Vec3d.ZERO): Set<BlockPos>
+    fun getBlockPositions(offset: Vec3d = Vec3d.ZERO): Iterable<BlockPos>
 
     /**
      * A predicate to check if an entity is within the region.

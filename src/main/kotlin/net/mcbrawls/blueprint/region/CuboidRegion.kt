@@ -40,9 +40,9 @@ data class CuboidRegion(
     /**
      * Calculates all positions for this cuboid region.
      */
-    override fun getBlockPositions(offset: Vec3d): Set<BlockPos> {
+    override fun getBlockPositions(offset: Vec3d): Iterable<BlockPos> {
         val box = createBox(offset)
-        return iterateBoxBlockPositions(box).toSet()
+        return iterateBoxBlockPositions(box)
     }
 
     /**
