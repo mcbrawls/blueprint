@@ -2,6 +2,8 @@ package net.mcbrawls.blueprint.region
 
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
+import net.mcbrawls.blueprint.command.BlueprintEditorCommand.maxVec
+import net.mcbrawls.blueprint.command.BlueprintEditorCommand.minVec
 import net.mcbrawls.blueprint.region.Region.Companion.iterateBoxBlockPositions
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.mcbrawls.blueprint.region.serialization.SerializableRegionTypes
@@ -29,13 +31,10 @@ data class CuboidRegion(
      */
     fun createBox(offset: Vec3d = Vec3d.ZERO): Box {
         val offsetPosition = rootPosition.add(offset)
-
-        val rootBox = Box.from(offsetPosition)
-
         val endPosition = offsetPosition.add(size)
-        val endBox = Box.from(endPosition)
-
-        return rootBox.union(endBox)
+        val minPos = minVec(offsetPosition, endPosition)
+        val maxPos = maxVec(offsetPosition, endPosition)
+        return Box(minPos, maxPos)
     }
 
     /**
