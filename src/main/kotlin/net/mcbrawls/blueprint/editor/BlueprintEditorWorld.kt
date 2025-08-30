@@ -1,5 +1,6 @@
 package net.mcbrawls.blueprint.editor
 
+import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.mcbrawls.blueprint.resource.BlueprintManager
 import net.mcbrawls.blueprint.structure.Blueprint
 import net.minecraft.block.BlockState
@@ -34,6 +35,8 @@ class BlueprintEditorWorld(
     val minPos: BlockPos get() = BlockPos(minX, minY, minZ)
     val maxPos: BlockPos get() = BlockPos(maxX, maxY, maxZ)
 
+    private val regions: MutableMap<String, SerializableRegion> = mutableMapOf()
+
     /**
      * Initializes this world with the blueprint id.
      * @return whether this created a new blueprint
@@ -48,6 +51,7 @@ class BlueprintEditorWorld(
 
             blueprint.place(this, BLUEPRINT_PLACEMENT_POS)
             blueprint.placeCreatorMarkers(this, BLUEPRINT_PLACEMENT_POS)
+            regions.putAll(blueprint.regions)
             false
         } else {
             setBlockState(minPos, Blocks.STONE.defaultState)
@@ -73,6 +77,19 @@ class BlueprintEditorWorld(
         players.forEach { player ->
             updateExpectedSize(player.blockPos)
         }
+
+        /*regions.forEach { _, region ->
+            if (region is CuboidRegion) {
+                val pos = region.rootPosition.add(Vec3d.of(BLUEPRINT_PLACEMENT_POS))
+                spawnParticles(DustParticleEffect(0xFF0000, 1.0f), pos.x, pos.y, pos.z, 1, 0.0, 0.0, 0.0, 0.0)
+                val otherPos = region.rootPosition.add(region.size).add(Vec3d.of(BLUEPRINT_PLACEMENT_POS))
+                spawnParticles(DustParticleEffect(0x0000FF, 1.0f), otherPos.x, otherPos.y, otherPos.z, 1, 0.0, 0.0, 0.0, 0.0)
+            }
+            if (region is SphericalRegion) {
+                val pos = region.rootPosition.add(Vec3d.of(BLUEPRINT_PLACEMENT_POS))
+                spawnParticles(DustParticleEffect(0xFF00FF, 1.0f), pos.x, pos.y, pos.z, 1, 0.0, 0.0, 0.0, 0.0)
+            }
+        }*/
     }
 
     private fun updateExpectedSize(pos: BlockPos) {
@@ -126,8 +143,15 @@ class BlueprintEditorWorld(
      */
     fun saveBlueprint(id: Identifier? = null): String {
         val (min, max) = getRoughBlueprintBoundingBox()
-        val blueprint = Blueprint.save(this, min, max)
+        val blueprint = Blueprint.save(this, min, max).let {
+            it.copy(regions = it.regions + regions)
+        }
+
         return BlueprintManager.saveGenerated(server, id ?: blueprintId, blueprint)
+    }
+
+    fun addRegion(id: String, region: SerializableRegion) {
+        regions[id] = region
     }
 
     companion object {
