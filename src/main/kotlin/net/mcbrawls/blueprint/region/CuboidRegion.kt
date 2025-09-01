@@ -4,7 +4,7 @@ import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.mcbrawls.blueprint.command.BlueprintEditorCommand.maxVec
 import net.mcbrawls.blueprint.command.BlueprintEditorCommand.minVec
-import net.mcbrawls.blueprint.region.Region.Companion.iterateBoxBlockPositions
+import net.mcbrawls.blueprint.region.Region.Companion.createBlockPositionSequence
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.mcbrawls.blueprint.region.serialization.SerializableRegionTypes
 import net.minecraft.entity.Entity
@@ -30,19 +30,24 @@ data class CuboidRegion(
      * Creates a box of this cuboid region.
      */
     fun createBox(offset: Vec3d = Vec3d.ZERO): Box {
+        val (minPos, maxPos) = createMinMaxVectors(offset)
+        return Box(minPos, maxPos)
+    }
+
+    private fun createMinMaxVectors(offset: Vec3d): Pair<Vec3d, Vec3d> {
         val offsetPosition = rootPosition.add(offset)
         val endPosition = offsetPosition.add(size)
         val minPos = minVec(offsetPosition, endPosition)
         val maxPos = maxVec(offsetPosition, endPosition)
-        return Box(minPos, maxPos)
+        return Pair(minPos, maxPos)
     }
 
     /**
      * Calculates all positions for this cuboid region.
      */
     override fun getBlockPositions(offset: Vec3d): Iterable<BlockPos> {
-        val box = createBox(offset)
-        return iterateBoxBlockPositions(box)
+        val (minPos, maxPos) = createMinMaxVectors(offset)
+        return createBlockPositionSequence(minPos, maxPos).asIterable()
     }
 
     /**

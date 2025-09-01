@@ -3,7 +3,7 @@ package net.mcbrawls.blueprint.region
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
-import net.mcbrawls.blueprint.region.Region.Companion.iterateBoxBlockPositions
+import net.mcbrawls.blueprint.region.Region.Companion.createBlockPositionSequence
 import net.mcbrawls.blueprint.region.serialization.SerializableRegion
 import net.mcbrawls.blueprint.region.serialization.SerializableRegionTypes
 import net.minecraft.entity.Entity
@@ -41,7 +41,7 @@ data class SphericalRegion(
         val box = Box.of(rootPosition.add(offset), diameter, diameter, diameter)
 
         // iterate through all positions and find all that are within range for a sphere
-        val boxPositions = iterateBoxBlockPositions(box)
+        val boxPositions = createBlockPositionSequence(box.minPos, box.maxPos).asIterable()
         val predicate = isPositionWithinRadius(offset)
         return boxPositions.filter(predicate)
     }

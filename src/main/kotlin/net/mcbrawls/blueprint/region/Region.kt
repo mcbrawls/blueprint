@@ -2,8 +2,8 @@ package net.mcbrawls.blueprint.region
 
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
+import kotlin.math.floor
 
 /**
  * A region is a defined volume of space within a blueprint.
@@ -31,14 +31,23 @@ interface Region {
          * Creates an iterable from a box.
          * @return a block position iterator
          */
-        fun iterateBoxBlockPositions(box: Box): Iterable<BlockPos> {
-            val minX = box.minX.toInt()
-            val minY = box.minY.toInt()
-            val minZ = box.minZ.toInt()
-            val maxX = box.maxX.toInt()
-            val maxY = box.maxY.toInt()
-            val maxZ = box.maxZ.toInt()
-            return BlockPos.iterate(minX, minY, minZ, maxX, maxY, maxZ)
+        fun createBlockPositionSequence(min: Vec3d, max: Vec3d): Sequence<BlockPos> {
+            val minX = floor(min.x).toInt()
+            val minY = floor(min.y).toInt()
+            val minZ = floor(min.z).toInt()
+            val maxX = floor(max.x).toInt()
+            val maxY = floor(max.y).toInt()
+            val maxZ = floor(max.z).toInt()
+
+            return sequence {
+                for (x in minX..maxX) {
+                    for (y in minY..maxY) {
+                        for (z in minZ..maxZ) {
+                            yield(BlockPos(x, y, z))
+                        }
+                    }
+                }
+            }
         }
     }
 }

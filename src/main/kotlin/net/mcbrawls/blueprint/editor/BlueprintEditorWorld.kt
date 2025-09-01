@@ -78,16 +78,26 @@ class BlueprintEditorWorld(
             updateExpectedSize(player.blockPos)
         }
 
-        /*regions.forEach { _, region ->
-            if (region is CuboidRegion) {
-                val pos = region.rootPosition.add(Vec3d.of(BLUEPRINT_PLACEMENT_POS))
-                spawnParticles(DustParticleEffect(0xFF0000, 1.0f), pos.x, pos.y, pos.z, 1, 0.0, 0.0, 0.0, 0.0)
-                val otherPos = region.rootPosition.add(region.size).add(Vec3d.of(BLUEPRINT_PLACEMENT_POS))
-                spawnParticles(DustParticleEffect(0x0000FF, 1.0f), otherPos.x, otherPos.y, otherPos.z, 1, 0.0, 0.0, 0.0, 0.0)
-            }
-            if (region is SphericalRegion) {
-                val pos = region.rootPosition.add(Vec3d.of(BLUEPRINT_PLACEMENT_POS))
-                spawnParticles(DustParticleEffect(0xFF00FF, 1.0f), pos.x, pos.y, pos.z, 1, 0.0, 0.0, 0.0, 0.0)
+        /*if (FabricLoader.getInstance().isDevelopmentEnvironment) {
+            regions.values.map { it.withOffset(Vec3d.of(BLUEPRINT_PLACEMENT_POS)) }.forEach { region ->
+                if (region is CuboidRegion) {
+                    val pos = region.rootPosition
+                    spawnParticles(DustParticleEffect(0xFF0000, 1.0f), pos.x, pos.y, pos.z, 1, 0.0, 0.0, 0.0, 0.0)
+                    val otherPos = region.rootPosition.add(region.size)
+                    spawnParticles(DustParticleEffect(0x0000FF, 1.0f), otherPos.x, otherPos.y, otherPos.z, 1, 0.0, 0.0, 0.0, 0.0)
+
+                    region.forEachPosition { pos ->
+                        setBlockState(pos, Blocks.GLASS.defaultState)
+                    }
+                }
+                if (region is SphericalRegion) {
+                    val pos = region.rootPosition
+                    spawnParticles(DustParticleEffect(0xFF00FF, 1.0f), pos.x, pos.y, pos.z, 1, 0.0, 0.0, 0.0, 0.0)
+
+                    region.forEachPosition { pos ->
+                        setBlockState(pos, Blocks.PINK_STAINED_GLASS.defaultState)
+                    }
+                }
             }
         }*/
     }
