@@ -43,7 +43,7 @@ object BlueprintEditorHandler {
                         .setMirrorOverworldGameRules(true)
                         .setMirrorOverworldDifficulty(true)
                         .setGenerator(VoidChunkGenerator(server, BiomeKeys.THE_VOID))
-                        .setDimensionType(DIMENSION_KEY)
+                        // .setDimensionType(DIMENSION_KEY)
                         .setWorldConstructor { server, key, config, _ -> BlueprintEditorWorld(blueprintId, server, key, config) }
                 )
 

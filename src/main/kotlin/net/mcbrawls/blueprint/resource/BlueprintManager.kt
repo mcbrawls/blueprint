@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.resource.SimpleResourceReloadListener
 import net.mcbrawls.blueprint.BlueprintMod
 import net.mcbrawls.blueprint.structure.Blueprint
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtElement
 import net.minecraft.nbt.NbtIo
 import net.minecraft.nbt.NbtOps
 import net.minecraft.nbt.NbtSizeTracker
@@ -20,11 +21,15 @@ import net.minecraft.util.WorldSavePath
 import net.minecraft.world.level.storage.LevelStorage
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.ByteArrayInputStream
+import java.io.DataInputStream
 import java.io.File
+import java.io.InputStream
 import java.nio.file.Path
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
+import java.util.function.BiFunction
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.extension
 import kotlin.io.path.isDirectory
@@ -124,9 +129,7 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
 
             // read raw blueprint nbt data
             val blueprintData = resources.mapValues { (identifier, resource) ->
-                val result = runCatching {
-                    resource.inputStream.use { NbtIo.readCompressed(it, NbtSizeTracker.ofUnlimitedBytes()) }
-                }
+                val result = readInputEither(resource.inputStream)
 
                 result.exceptionOrNull()?.also { exception ->
                     logger.error("Could not load blueprint: $identifier", exception)
@@ -162,9 +165,7 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
                                 val file = fullPath.toFile()
 
                                 // parse nbt
-                                runCatching {
-                                    NbtIo.readCompressed(file.inputStream(), NbtSizeTracker.ofUnlimitedBytes())
-                                }.getOrNull()?.also { nbt ->
+                               readInputEither(file.inputStream()).getOrNull()?.also { nbt ->
                                     // calculate path and store
                                     val relativePath = fullPath
                                         .relativeTo(blueprintFolderPath.parent)
@@ -209,6 +210,25 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
 
             loadedBlueprints
         }
+    }
+
+    private fun readInput(bytes: ByteArray, reader: BiFunction<InputStream, NbtSizeTracker, NbtElement>): Result<NbtElement> {
+        return runCatching {
+            ByteArrayInputStream(bytes.copyOf()).use {
+                reader.apply(it, NbtSizeTracker.ofUnlimitedBytes())
+            }
+        }
+    }
+
+    private fun readInputEither(stream: InputStream): Result<NbtElement> {
+        val bytes = stream.readBytes()
+        val result = readInput(bytes, NbtIo::readCompressed).recoverCatching {
+            readInput(bytes) { s, t ->
+                NbtIo.read(DataInputStream(s), t)
+            }.getOrThrow()
+        }
+
+        return result
     }
 
     override fun apply(
