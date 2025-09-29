@@ -12,6 +12,7 @@ import net.minecraft.world.GameMode
 import net.minecraft.world.World
 import net.minecraft.world.biome.BiomeKeys
 import net.minecraft.world.dimension.DimensionType
+import net.minecraft.world.dimension.DimensionTypes
 import xyz.nucleoid.fantasy.Fantasy
 import xyz.nucleoid.fantasy.RuntimeWorldConfig
 import xyz.nucleoid.fantasy.RuntimeWorldHandle
@@ -43,7 +44,7 @@ object BlueprintEditorHandler {
                         .setMirrorOverworldGameRules(true)
                         .setMirrorOverworldDifficulty(true)
                         .setGenerator(VoidChunkGenerator(server, BiomeKeys.THE_VOID))
-                        // .setDimensionType(DIMENSION_KEY)
+                        .setDimensionType(DimensionTypes.OVERWORLD)
                         .setWorldConstructor { server, key, config, _ -> BlueprintEditorWorld(blueprintId, server, key, config) }
                 )
 
