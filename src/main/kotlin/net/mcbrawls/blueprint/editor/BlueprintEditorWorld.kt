@@ -165,6 +165,6 @@ class BlueprintEditorWorld(
     }
 
     companion object {
-        val BLUEPRINT_PLACEMENT_POS = BlockPos(0, 128, 0)
+        val BLUEPRINT_PLACEMENT_POS = BlockPos(0, 64, 0)
     }
 }
