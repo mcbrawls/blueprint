@@ -32,13 +32,14 @@ data class Anchor(
         world.spawnEntity(entity)
     }
 
-    fun placeEntity(world: ServerWorld, builder: (data: String?) -> Entity) {
+    fun <T : Entity> placeEntity(world: ServerWorld, builder: (data: String?) -> T): T {
         val entity = builder.invoke(data)
         placeEntity(world, entity)
+        return entity
     }
 
-    fun <T : Entity> placeEntity(world: ServerWorld, type: EntityType<T>, builder: (entity: T, data: String?) -> Unit = { _, _ -> }) {
-        type.create(world, SpawnReason.CHUNK_GENERATION)?.also { entity ->
+    fun <T : Entity> placeEntity(world: ServerWorld, type: EntityType<T>, builder: (entity: T, data: String?) -> Unit = { _, _ -> }): T? {
+        return type.create(world, SpawnReason.CHUNK_GENERATION)?.also { entity ->
             placeEntity(world) { data ->
                 builder.invoke(entity, data)
                 entity
