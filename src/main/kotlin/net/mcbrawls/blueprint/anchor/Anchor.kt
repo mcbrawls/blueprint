@@ -28,7 +28,7 @@ data class Anchor(
 
     fun placeEntity(world: ServerWorld, entity: Entity) {
         entity.setPosition(position)
-        entity.rotate(rotation.x, rotation.y)
+        entity.rotate(rotation.x, false, rotation.y, false)
         world.spawnEntity(entity)
     }
 

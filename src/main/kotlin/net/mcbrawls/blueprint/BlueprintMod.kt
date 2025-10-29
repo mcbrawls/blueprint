@@ -2,7 +2,7 @@ package net.mcbrawls.blueprint
 
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper
+import net.fabricmc.fabric.api.resource.v1.ResourceLoader
 import net.mcbrawls.blueprint.block.BlueprintBlocks
 import net.mcbrawls.blueprint.block.entity.BlueprintBlockEntityTypes
 import net.mcbrawls.blueprint.command.BlueprintCommand
@@ -11,6 +11,7 @@ import net.mcbrawls.blueprint.entity.BlueprintEntityTypes
 import net.mcbrawls.blueprint.item.BlueprintItems
 import net.mcbrawls.blueprint.resource.BlueprintManager
 import net.minecraft.resource.ResourceType
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
@@ -38,7 +39,7 @@ object BlueprintMod : ModInitializer {
         }
 
         // register resource listener
-        ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(BlueprintManager)
+        ResourceLoader.get(ResourceType.SERVER_DATA).registerReloader(Identifier.of(MOD_ID, "loader"), BlueprintManager)
     }
 }
 

@@ -145,7 +145,7 @@ data class Blueprint(
                 entity.anchorId = id
                 entity.data = anchor.data
                 entity.setPosition(anchor.position.add(Vec3d.of(pos)))
-                entity.rotate(anchor.rotation.x, anchor.rotation.y)
+                entity.rotate(anchor.rotation.x, false, anchor.rotation.y, false)
                 world.spawnEntity(entity)
             }
         }

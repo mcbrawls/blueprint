@@ -4,7 +4,7 @@ import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import dev.andante.codex.encodeQuick
 import kotlinx.io.IOException
-import net.fabricmc.fabric.api.resource.SimpleResourceReloadListener
+import net.fabricmc.fabric.api.resource.v1.reloader.SimpleResourceReloader
 import net.mcbrawls.blueprint.BlueprintMod
 import net.mcbrawls.blueprint.structure.Blueprint
 import net.minecraft.nbt.NbtCompound
@@ -14,7 +14,7 @@ import net.minecraft.nbt.NbtOps
 import net.minecraft.nbt.NbtSizeTracker
 import net.minecraft.resource.Resource
 import net.minecraft.resource.ResourceFinder
-import net.minecraft.resource.ResourceManager
+import net.minecraft.resource.ResourceReloader
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import net.minecraft.util.WorldSavePath
@@ -28,9 +28,7 @@ import java.io.InputStream
 import java.nio.file.Path
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executor
 import java.util.function.BiFunction
-import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.extension
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
@@ -39,7 +37,7 @@ import kotlin.io.path.relativeTo
 import kotlin.io.path.walk
 import kotlin.jvm.optionals.getOrNull
 
-object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint>> {
+object BlueprintManager : SimpleResourceReloader<Map<Identifier, Blueprint>>() {
     /**
      * The identifier of the blueprint resource listener.
      */
@@ -118,98 +116,99 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
         return relativePath
     }
 
-    @OptIn(ExperimentalPathApi::class)
-    override fun load(
-        manager: ResourceManager,
-        executor: Executor
-    ): CompletableFuture<Map<Identifier, Blueprint>> {
-        return CompletableFuture.supplyAsync {
-            // find all resources
-            val resources: Map<Identifier, Resource> = finder.findResources(manager)
+    override fun prepare(store: ResourceReloader.Store): Map<Identifier, Blueprint> {
+        // find all resources
+        val manager = store.resourceManager
+        val resources: Map<Identifier, Resource> = finder.findResources(manager)
 
-            // read raw blueprint nbt data
-            val blueprintData = resources.mapValues { (identifier, resource) ->
-                val result = readInputEither(resource.inputStream)
+        // read raw blueprint nbt data
+        val blueprintData = resources.mapValues { (identifier, resource) ->
+            val result = readInputEither(resource.inputStream)
 
-                result.exceptionOrNull()?.also { exception ->
-                    logger.error("Could not load blueprint: $identifier", exception)
-                }
+            result.exceptionOrNull()?.also { exception ->
+                logger.error("Could not load blueprint: $identifier", exception)
+            }
 
-                result.getOrNull()
-            }.toMutableMap()
+            result.getOrNull()
+        }.toMutableMap()
 
-            // add extra (generated)
-            activeLevelStorageSession?.also { session ->
-                val generatedPath = session.getDirectory(WorldSavePath.GENERATED)
-                if (generatedPath.isDirectory()) {
-                    // collect all namespaces (direct children of the generated folder)
-                    val namespaces = generatedPath
-                        .listDirectoryEntries()
-                        .map(Path::toFile)
-                        .filter(File::isDirectory)
-                        .map(File::getName)
+        // add extra (generated)
+        activeLevelStorageSession?.also { session ->
+            val generatedPath = session.getDirectory(WorldSavePath.GENERATED)
+            if (generatedPath.isDirectory()) {
+                // collect all namespaces (direct children of the generated folder)
+                val namespaces = generatedPath
+                    .listDirectoryEntries()
+                    .map(Path::toFile)
+                    .filter(File::isDirectory)
+                    .map(File::getName)
 
-                    // scan all namespaces
-                    namespaces.forEach { namespace ->
-                        // resolve blueprint folder for namespace
-                        val blueprintFolderPath = generatedPath
-                            .resolve(namespace)
-                            .resolve(finder.directoryName)
-                            .toAbsolutePath()
+                // scan all namespaces
+                namespaces.forEach { namespace ->
+                    // resolve blueprint folder for namespace
+                    val blueprintFolderPath = generatedPath
+                        .resolve(namespace)
+                        .resolve(finder.directoryName)
+                        .toAbsolutePath()
 
-                        // walk namespaced blueprint folder
-                        blueprintFolderPath.walk().forEach { path ->
-                            val fullPath = path.toAbsolutePath()
-                            val extension = ".${fullPath.extension}"
-                            if (extension == finder.fileExtension) {
-                                val file = fullPath.toFile()
+                    // walk namespaced blueprint folder
+                    blueprintFolderPath.walk().forEach { path ->
+                        val fullPath = path.toAbsolutePath()
+                        val extension = ".${fullPath.extension}"
+                        if (extension == finder.fileExtension) {
+                            val file = fullPath.toFile()
 
-                                // parse nbt
-                               readInputEither(file.inputStream()).getOrNull()?.also { nbt ->
-                                    // calculate path and store
-                                    val relativePath = fullPath
-                                        .relativeTo(blueprintFolderPath.parent)
-                                        .pathString
-                                        .replace(File.separatorChar, '/')
+                            // parse nbt
+                            readInputEither(file.inputStream()).getOrNull()?.also { nbt ->
+                                // calculate path and store
+                                val relativePath = fullPath
+                                    .relativeTo(blueprintFolderPath.parent)
+                                    .pathString
+                                    .replace(File.separatorChar, '/')
 
-                                    val identifier = Identifier.of(namespace, relativePath)
-                                    blueprintData[identifier] = nbt
-                                }
+                                val identifier = Identifier.of(namespace, relativePath)
+                                blueprintData[identifier] = nbt
                             }
                         }
                     }
                 }
             }
+        }
 
-            // decode nbt
-            val blueprintResults = blueprintData.mapValues { (_, blueprintNbt) ->
-                if (blueprintNbt == null) {
-                    Optional.empty()
+        // decode nbt
+        val blueprintResults = blueprintData.mapValues { (_, blueprintNbt) ->
+            if (blueprintNbt == null) {
+                Optional.empty()
+            } else {
+                // attempt decode blueprint
+                val blueprintDataResult = Blueprint.CODEC.decode(NbtOps.INSTANCE, blueprintNbt)
+
+                // log error if present
+                blueprintDataResult.resultOrPartial(logger::error)
+            }
+        }
+
+        // compile blueprints
+        val loadedBlueprints: Map<Identifier, Blueprint> = blueprintResults
+            .mapNotNull { (location, optionalResult) ->
+                // put blueprint if present
+                val result = optionalResult.getOrNull()
+                if (result != null) {
+                    val loadedLocation = finder.toResourceId(location)
+                    loadedLocation to result.first
                 } else {
-                    // attempt decode blueprint
-                    val blueprintDataResult = Blueprint.CODEC.decode(NbtOps.INSTANCE, blueprintNbt)
-
-                    // log error if present
-                    blueprintDataResult.resultOrPartial(logger::error)
+                    null
                 }
             }
+            .toMap()
 
-            // compile blueprints
-            val loadedBlueprints: Map<Identifier, Blueprint> = blueprintResults
-                .mapNotNull { (location, optionalResult) ->
-                    // put blueprint if present
-                    val result = optionalResult.getOrNull()
-                    if (result != null) {
-                        val loadedLocation = finder.toResourceId(location)
-                        loadedLocation to result.first
-                    } else {
-                        null
-                    }
-                }
-                .toMap()
+        return loadedBlueprints
+    }
 
-            loadedBlueprints
-        }
+    override fun apply(prepared: Map<Identifier, Blueprint>, store: ResourceReloader.Store) {
+        // consume resultant data
+        blueprints.clear()
+        blueprints.putAll(prepared)
     }
 
     private fun readInput(bytes: ByteArray, reader: BiFunction<InputStream, NbtSizeTracker, NbtElement>): Result<NbtElement> {
@@ -231,24 +230,8 @@ object BlueprintManager : SimpleResourceReloadListener<Map<Identifier, Blueprint
         return result
     }
 
-    override fun apply(
-        data: Map<Identifier, Blueprint>,
-        manager: ResourceManager,
-        executor: Executor
-    ): CompletableFuture<Void> {
-        return CompletableFuture.runAsync {
-            // consume resultant data
-            blueprints.clear()
-            blueprints.putAll(data)
-        }
-    }
-
     fun onSessionChange(session: LevelStorage.Session) {
         blueprints.clear()
         activeLevelStorageSession = session
-    }
-
-    override fun getFabricId(): Identifier {
-        return resourceId
     }
 }

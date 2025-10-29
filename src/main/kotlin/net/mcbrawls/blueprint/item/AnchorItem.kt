@@ -27,7 +27,7 @@ class AnchorItem(settings: Settings) : Item(settings), PolymerItem {
 
         BlueprintEntityTypes.ANCHOR.create(world, SpawnReason.SPAWN_ITEM_USE)?.also { entity ->
             entity.setPosition(context.hitPos)
-            entity.rotate(context.playerYaw, 0.0f)
+            entity.rotate(context.playerYaw, false, 0.0f, false)
             world.spawnEntity(entity)
             entity.openAnchorIdEditor(player)
 

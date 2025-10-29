@@ -11,7 +11,6 @@ import net.minecraft.entity.decoration.InteractionEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.particle.DustParticleEffect
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
 import net.minecraft.storage.ReadView
 import net.minecraft.storage.WriteView
 import net.minecraft.text.Text
@@ -37,6 +36,7 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
     }
 
     override fun tick() {
+        val world = entityWorld
         if (world !is BlueprintEditorWorld) {
             discard()
             return
@@ -44,10 +44,7 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
 
         super.tick()
 
-        val world = world
-        if (world is ServerWorld) {
-            world.spawnParticles(DustParticleEffect(0xFF0000, 1.0f), x, getBodyY(0.5), z, 1, 0.0, 0.0, 0.0, 0.0)
-        }
+        world.spawnParticles(DustParticleEffect(0xFF0000, 1.0f), x, getBodyY(0.5), z, 1, 0.0, 0.0, 0.0, 0.0)
     }
 
     override fun interact(player: PlayerEntity, hand: Hand): ActionResult {
@@ -89,7 +86,7 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
     }
 
     fun createAnchor(root: BlockPos): Anchor {
-        return Anchor(pos.subtract(Vec3d.of(root)), Vec2f(yaw, pitch), data)
+        return Anchor(entityPos.subtract(Vec3d.of(root)), Vec2f(yaw, pitch), data)
     }
 
     /**
@@ -99,7 +96,7 @@ class AnchorEntity(type: EntityType<*>, world: World) : InteractionEntity(type, 
     fun getOrCreateId(): String {
         anchorId?.also { return it }
 
-        return Blueprint.Companion.createUniqueId(world ?: throw IllegalStateException("World not set"), pos)
+        return Blueprint.createUniqueId(entityWorld ?: throw IllegalStateException("World not set"), entityPos)
     }
 
     override fun writeCustomData(view: WriteView) {
