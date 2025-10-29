@@ -17,6 +17,7 @@ import net.mcbrawls.slate.tile.Tile.Companion.tile
 import net.mcbrawls.slate.tile.TileGrid
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
 import net.minecraft.entity.SpawnReason
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
@@ -35,6 +36,7 @@ import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.BiConsumer
+import java.util.function.Consumer
 
 /**
  * Represents a structure blueprint.
@@ -168,7 +170,11 @@ data class Blueprint(
          */
         val CODEC: Codec<Blueprint> = RecordCodecBuilder.create { instance ->
             instance.group(
-                BlockState.CODEC.listOf()
+                BlockState.CODEC
+                    .orElse(Consumer { error ->
+                        BlueprintMod.logger.error("Could not load blockstate: $error")
+                    }, Blocks.AIR.defaultState)
+                    .listOf()
                     .fieldOf("palette")
                     .forGetter(Blueprint::palette),
                 PalettedState.CODEC.listOf()
