@@ -10,8 +10,11 @@ import net.mcbrawls.blueprint.editor.BlueprintEditorWorld
 import net.mcbrawls.blueprint.region.CuboidRegion
 import net.mcbrawls.blueprint.region.SphericalRegion
 import net.mcbrawls.blueprint.resource.BlueprintManager
+import net.minecraft.command.DefaultPermissions
 import net.minecraft.command.argument.IdentifierArgumentType
 import net.minecraft.command.argument.Vec3ArgumentType
+import net.minecraft.command.permission.PermissionCheck
+import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
@@ -35,7 +38,7 @@ object BlueprintEditorCommand {
     fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {
         dispatcher.register(
             literal("blueprint-editor")
-                .requires { it.hasPermissionLevel(2) }
+                .requires(CommandManager.requirePermissionLevel(PermissionCheck.Require(DefaultPermissions.GAMEMASTERS)))
                 .then(
                     literal("open")
                         .then(
@@ -157,10 +160,10 @@ object BlueprintEditorCommand {
         val source = context.source
         val world = source.world as? BlueprintEditorWorld ?: throw NOT_BLUEPRINT_EDITOR_WORLD_EXCEPTION.create()
         if (customBlueprintId != null) {
-            val pathString = world.saveBlueprint(customBlueprintId)
+            val pathString = world.saveBlueprint(source.server, customBlueprintId)
             source.sendFeedback({ Text.literal("Saved editor blueprint as: \"$pathString\"") }, true)
         } else {
-            val pathString = world.saveBlueprint()
+            val pathString = world.saveBlueprint(source.server)
             source.sendFeedback({ Text.literal("Saved editor blueprint: \"$pathString\"") }, true)
         }
 

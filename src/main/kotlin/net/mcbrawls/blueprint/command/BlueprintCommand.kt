@@ -12,8 +12,11 @@ import net.mcbrawls.blueprint.BlueprintMod.MOD_NAME
 import net.mcbrawls.blueprint.asExtremeties
 import net.mcbrawls.blueprint.resource.BlueprintManager
 import net.mcbrawls.blueprint.structure.Blueprint
+import net.minecraft.command.DefaultPermissions
 import net.minecraft.command.argument.BlockPosArgumentType
 import net.minecraft.command.argument.IdentifierArgumentType
+import net.minecraft.command.permission.PermissionCheck
+import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
@@ -32,7 +35,7 @@ object BlueprintCommand {
         dispatcher.register(
             literal("blueprint")
                 .executes(::execute)
-                .requires { it.hasPermissionLevel(2) }
+                .requires(CommandManager.requirePermissionLevel(PermissionCheck.Require(DefaultPermissions.GAMEMASTERS)))
                 .then(
                     literal("save")
                         .then(

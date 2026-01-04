@@ -151,7 +151,7 @@ class BlueprintEditorWorld(
     /**
      * Saves the built Blueprint to disk.
      */
-    fun saveBlueprint(id: Identifier? = null): String {
+    fun saveBlueprint(server: MinecraftServer, id: Identifier? = null): String {
         val (min, max) = getRoughBlueprintBoundingBox()
         val blueprint = Blueprint.save(this, min, max).let {
             it.copy(regions = it.regions + regions)
