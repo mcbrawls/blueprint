@@ -8,7 +8,6 @@ import net.mcbrawls.blueprint.region.CompoundRegion
 import net.mcbrawls.blueprint.region.EmptyRegion
 import net.mcbrawls.blueprint.region.PointRegion
 import net.mcbrawls.blueprint.region.Region
-import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
@@ -154,10 +153,9 @@ data class PlacedBlueprint(
      */
     fun clear(world: ServerWorld) {
         val air = Blocks.AIR.defaultState
-        val pos = BlockPos.Mutable()
 
-        forEachPosition { x, y, z ->
-            world.setBlockState(pos.set(x, y, z), air, Block.NOTIFY_LISTENERS or Block.FORCE_STATE or Block.NO_REDRAW)
+        BulkPlacement(world).use { placement ->
+            forEachPosition { x, y, z -> placement.setBlock(x, y, z, air) }
         }
     }
 

@@ -92,10 +92,12 @@ data class Blueprint(
      * @return a placed blueprint
      */
     fun place(world: ServerWorld, position: BlockPos, processor: BlockStateProcessor? = null): PlacedBlueprint {
-        val pos = BlockPos.Mutable()
-        forEach { x, y, z, state, blockEntityNbt ->
-            placePosition(world, pos.set(position.x + x, position.y + y, position.z + z), state, blockEntityNbt, processor)
+        BulkPlacement(world).use { placement ->
+            forEach(processedPalette(processor)) { x, y, z, state, blockEntityNbt ->
+                placement.setBlock(position.x + x, position.y + y, position.z + z, state, blockEntityNbt)
+            }
         }
+
         return PlacedBlueprint(this, position)
     }
 
@@ -109,10 +111,11 @@ data class Blueprint(
         val future: CompletableFuture<PlacedBlueprint> = CompletableFuture.supplyAsync {
             synchronized(world) {
                 var i = 0
-                val pos = BlockPos.Mutable()
-                forEach { x, y, z, state, blockEntityNbt ->
-                    placePosition(world, pos.set(position.x + x, position.y + y, position.z + z), state, blockEntityNbt, processor)
-                    progress.set(++i / totalBlocks.toFloat())
+                BulkPlacement(world).use { placement ->
+                    forEach(processedPalette(processor)) { x, y, z, state, blockEntityNbt ->
+                        placement.setBlock(position.x + x, position.y + y, position.z + z, state, blockEntityNbt)
+                        progress.set(++i / totalBlocks.toFloat())
+                    }
                 }
             }
 
@@ -164,9 +167,9 @@ data class Blueprint(
 
     /**
      * Performs the given action for every block's offset position, block state and block entity nbt, in storage order.
+     * [palette] is the palette to read states from, which defaults to this blueprint's own.
      */
-    inline fun forEach(action: (x: Int, y: Int, z: Int, state: BlockState, blockEntityNbt: NbtCompound?) -> Unit) {
-        val palette = palette
+    inline fun forEach(palette: List<BlockState> = this.palette, action: (x: Int, y: Int, z: Int, state: BlockState, blockEntityNbt: NbtCompound?) -> Unit) {
         val blockEntities = blockEntities
         val lookupPos = if (blockEntities.isEmpty()) null else BlockPos.Mutable()
 
@@ -174,6 +177,17 @@ data class Blueprint(
             val blockEntityNbt = lookupPos?.let { pos -> blockEntities[pos.set(x, y, z)]?.nbt }
             action(x, y, z, palette[paletteIndex], blockEntityNbt)
         }
+    }
+
+    /**
+     * This blueprint's palette with [processor] applied to each entry.
+     *
+     * A processed state depends only on the state it came from, so a placement processes each palette entry once
+     * rather than once per block.
+     * @return the palette itself when there is no processor
+     */
+    fun processedPalette(processor: BlockStateProcessor?): List<BlockState> {
+        return if (processor == null) palette else palette.map(processor::process)
     }
 
     /**
