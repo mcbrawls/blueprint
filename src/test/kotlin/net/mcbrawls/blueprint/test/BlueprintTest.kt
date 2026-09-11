@@ -9,6 +9,7 @@ import net.mcbrawls.blueprint.anchor.Anchor
 import net.mcbrawls.blueprint.region.CuboidRegion
 import net.mcbrawls.blueprint.region.PointRegion
 import net.mcbrawls.blueprint.resource.BlueprintManager
+import net.mcbrawls.blueprint.structure.BlockStore
 import net.mcbrawls.blueprint.structure.Blueprint
 import net.mcbrawls.blueprint.structure.BlueprintBatch
 import net.mcbrawls.blueprint.structure.ProgressProvider
@@ -32,7 +33,7 @@ object BlueprintTest : ModInitializer {
                         runCatching {
                             val b = Blueprint(
                                 emptyList(),
-                                emptyList(),
+                                BlockStore.EMPTY,
                                 emptyMap(),
                                 mapOf(
                                     "point" to PointRegion(Vec3d.ZERO),

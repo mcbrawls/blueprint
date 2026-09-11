@@ -35,7 +35,6 @@ import java.nio.charset.StandardCharsets
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
-import java.util.function.BiConsumer
 import java.util.function.Consumer
 
 /**
@@ -48,9 +47,9 @@ data class Blueprint(
     val palette: List<BlockState>,
 
     /**
-     * A list of paletted states, mapping palette indexes to their positions.
+     * Every block of the blueprint: an offset position and an index into [palette], packed into primitive arrays.
      */
-    val palettedBlockStates: List<PalettedState>,
+    val blocks: BlockStore,
 
     /**
      * A list of block entities stored within the blueprint.
@@ -67,10 +66,16 @@ data class Blueprint(
      */
     val anchors: List<Pair<String, Anchor>>,
 ) {
+    init {
+        require(blocks.maxPaletteIndex < palette.size) {
+            "Blocks reference palette index ${blocks.maxPaletteIndex}, but the palette holds ${palette.size} entries"
+        }
+    }
+
     /**
      * The size of the blueprint.
      */
-    val size: Vec3i = calculateBlueprintSize(palettedBlockStates.map(PalettedState::blockPos))
+    val size: Vec3i = blocks.size
 
     /**
      * The centre of this blueprint.
@@ -80,14 +85,17 @@ data class Blueprint(
     /**
      * The total amount of blocks placed from this blueprint.
      */
-    val totalBlocks: Int = palettedBlockStates.size
+    val totalBlocks: Int = blocks.count
 
     /**
      * Places this blueprint in the world at the given position.
      * @return a placed blueprint
      */
     fun place(world: ServerWorld, position: BlockPos, processor: BlockStateProcessor? = null): PlacedBlueprint {
-        forEach { offset, (state, blockEntityNbt) -> placePosition(world, position, offset, state, blockEntityNbt, processor) }
+        val pos = BlockPos.Mutable()
+        forEach { x, y, z, state, blockEntityNbt ->
+            placePosition(world, pos.set(position.x + x, position.y + y, position.z + z), state, blockEntityNbt, processor)
+        }
         return PlacedBlueprint(this, position)
     }
 
@@ -101,8 +109,9 @@ data class Blueprint(
         val future: CompletableFuture<PlacedBlueprint> = CompletableFuture.supplyAsync {
             synchronized(world) {
                 var i = 0
-                forEach { offset, (state, blockEntityNbt) ->
-                    placePosition(world, position, offset, state, blockEntityNbt, processor)
+                val pos = BlockPos.Mutable()
+                forEach { x, y, z, state, blockEntityNbt ->
+                    placePosition(world, pos.set(position.x + x, position.y + y, position.z + z), state, blockEntityNbt, processor)
                     progress.set(++i / totalBlocks.toFloat())
                 }
             }
@@ -154,14 +163,24 @@ data class Blueprint(
     }
 
     /**
-     * Performs the given action for every position in the blueprint.
+     * Performs the given action for every block's offset position, block state and block entity nbt, in storage order.
      */
-    fun forEach(action: BiConsumer<BlockPos, Pair<BlockState, NbtCompound?>>) {
-        palettedBlockStates.forEach { (offset, index) ->
-            val state = palette[index]
-            val blockEntity = blockEntities[offset]?.nbt
-            action.accept(offset, state to blockEntity)
+    inline fun forEach(action: (x: Int, y: Int, z: Int, state: BlockState, blockEntityNbt: NbtCompound?) -> Unit) {
+        val palette = palette
+        val blockEntities = blockEntities
+        val lookupPos = if (blockEntities.isEmpty()) null else BlockPos.Mutable()
+
+        blocks.forEach { x, y, z, paletteIndex ->
+            val blockEntityNbt = lookupPos?.let { pos -> blockEntities[pos.set(x, y, z)]?.nbt }
+            action(x, y, z, palette[paletteIndex], blockEntityNbt)
         }
+    }
+
+    /**
+     * Performs the given action for every block's offset position, in storage order.
+     */
+    inline fun forEachPosition(action: (x: Int, y: Int, z: Int) -> Unit) {
+        blocks.forEach { x, y, z, _ -> action(x, y, z) }
     }
 
     companion object {
@@ -177,9 +196,8 @@ data class Blueprint(
                     .listOf()
                     .fieldOf("palette")
                     .forGetter(Blueprint::palette),
-                PalettedState.CODEC.listOf()
-                    .fieldOf("block_states")
-                    .forGetter(Blueprint::palettedBlockStates),
+                BlockStore.MAP_CODEC
+                    .forGetter(Blueprint::blocks),
                 BlueprintBlockEntity.CODEC.listOf()
                     .fieldOf("block_entities")
                     .xmap({ entry -> entry.associateBy(BlueprintBlockEntity::blockPos) }, { map -> map.values.toList() })
@@ -202,7 +220,7 @@ data class Blueprint(
         /**
          * An entirely empty blueprint.
          */
-        val EMPTY = Blueprint(emptyList(), emptyList(), emptyMap(), emptyMap(), emptyList())
+        val EMPTY = Blueprint(emptyList(), BlockStore.EMPTY, emptyMap(), emptyMap(), emptyList())
 
         /**
          * Flattens a set of progressive futures into one progressive future.
@@ -230,10 +248,17 @@ data class Blueprint(
          * Places a position's block data to the world.
          */
         fun placePosition(world: ServerWorld, position: BlockPos, offset: BlockPos, state: BlockState, blockEntityNbt: NbtCompound?, processor: BlockStateProcessor?) {
-            val trueState = processor?.process(state) ?: state
-            val truePos = position.add(offset)
+            placePosition(world, position.add(offset), state, blockEntityNbt, processor)
+        }
 
-            // state
+        /**
+         * Places a position's block data to the world.
+         */
+        fun placePosition(world: ServerWorld, pos: BlockPos, state: BlockState, blockEntityNbt: NbtCompound?, processor: BlockStateProcessor?) {
+            val trueState = processor?.process(state) ?: state
+
+            // state; block entities hold onto the position they are created with, so never hand them a mutable one
+            val truePos = if (trueState.hasBlockEntity()) pos.toImmutable() else pos
             world.setBlockState(truePos, trueState, Block.NOTIFY_LISTENERS or Block.FORCE_STATE or Block.NO_REDRAW)
 
             // block entity
@@ -249,8 +274,9 @@ data class Blueprint(
 
             // create paletted positions
             val palette = mutableListOf<BlockState>()
+            val paletteIndexes = mutableMapOf<BlockState, Int>()
             val blockEntities = mutableListOf<BlueprintBlockEntity>()
-            val palettedBlockStates = mutableListOf<PalettedState>()
+            val blocks = BlockStore.Builder()
             val regions = mutableMapOf<String, SerializableRegion>()
 
             positions.forEach { pos ->
@@ -261,13 +287,18 @@ data class Blueprint(
                 if (!RegionBlock.trySaveRegion(world, pos, relativePos, state, regions)) {
                     if (!state.isAir) {
                         // build palette
-                        if (state !in palette) {
+                        val paletteId = paletteIndexes.getOrPut(state) {
+                            val index = palette.size
+                            require(index < BlockStore.MAX_PALETTE_SIZE) {
+                                "Blueprint palette cannot hold more than ${BlockStore.MAX_PALETTE_SIZE} block states"
+                            }
+
                             palette.add(state)
+                            index
                         }
 
-                        // create paletted state
-                        val paletteId = palette.indexOf(state)
-                        palettedBlockStates.add(PalettedState(relativePos, paletteId))
+                        // store block
+                        blocks.add(relativePos.x, relativePos.y, relativePos.z, paletteId)
                     }
 
                     // block entity
@@ -288,27 +319,7 @@ data class Blueprint(
             }
 
             // create blueprint
-            return Blueprint(palette, palettedBlockStates, blockEntities.associateBy(BlueprintBlockEntity::blockPos), regions, anchors)
-        }
-
-        /**
-         * Calculates the size of a blueprint from its positions.
-         * @return the blueprint size
-         */
-        fun calculateBlueprintSize(positions: List<BlockPos>): BlockPos {
-            if (positions.isEmpty()) {
-                return BlockPos.ORIGIN
-            }
-
-            val minX = positions.minOf { it.x }
-            val minY = positions.minOf { it.y }
-            val minZ = positions.minOf { it.z }
-
-            val maxX = positions.maxOf { it.x }
-            val maxY = positions.maxOf { it.y }
-            val maxZ = positions.maxOf { it.z }
-
-            return BlockPos(maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1)
+            return Blueprint(palette, blocks.build(), blockEntities.associateBy(BlueprintBlockEntity::blockPos), regions, anchors)
         }
 
         /**

@@ -180,11 +180,13 @@ object BlueprintManager : SimpleResourceReloader<Map<Identifier, Blueprint>>() {
             if (blueprintNbt == null) {
                 Optional.empty()
             } else {
-                // attempt decode blueprint
-                val blueprintDataResult = Blueprint.CODEC.decode(NbtOps.INSTANCE, blueprintNbt)
+                // attempt decode blueprint; a blueprint which cannot be built at all must not fail the whole reload
+                val blueprintDataResult = runCatching { Blueprint.CODEC.decode(NbtOps.INSTANCE, blueprintNbt) }
+                    .onFailure { exception -> logger.error("Could not decode blueprint", exception) }
+                    .getOrNull()
 
                 // log error if present
-                blueprintDataResult.resultOrPartial(logger::error)
+                blueprintDataResult?.resultOrPartial(logger::error) ?: Optional.empty()
             }
         }
 

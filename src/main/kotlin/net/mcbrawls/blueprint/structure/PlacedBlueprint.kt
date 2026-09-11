@@ -37,21 +37,14 @@ data class PlacedBlueprint(
     val center: BlockPos = position.add(blueprint.center)
 
     /**
-     * All positions of this blueprint.
+     * All positions within the bounds of this blueprint.
+     *
+     * Holding them costs one object per position, for the whole bounding box rather than just the blueprint's blocks;
+     * prefer [forEachPosition], which allocates nothing.
      */
     val positions: Set<BlockPos> by lazy {
-        buildSet {
-            val size = blueprint.size
-            val sizeX = size.x
-            val sizeY = size.y
-            val sizeZ = size.z
-            for (x in 0 until sizeX) {
-                for (y in 0 until sizeY) {
-                    for (z in 0 until sizeZ) {
-                        add(position.add(x, y, z))
-                    }
-                }
-            }
+        buildSet(blueprint.size.let { it.x.toLong() * it.y * it.z }.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()) {
+            forEachPosition { x, y, z -> add(BlockPos(x, y, z)) }
         }
     }
 
@@ -131,18 +124,40 @@ data class PlacedBlueprint(
     }
 
     /**
-     * Performs an action for every position in this placed blueprint.
+     * Performs an action for every position within the bounds of this placed blueprint, without allocating a position
+     * per block.
+     */
+    inline fun forEachPosition(action: (x: Int, y: Int, z: Int) -> Unit) {
+        val size = blueprint.size
+        val originX = position.x
+        val originY = position.y
+        val originZ = position.z
+
+        for (x in 0 until size.x) {
+            for (y in 0 until size.y) {
+                for (z in 0 until size.z) {
+                    action(originX + x, originY + y, originZ + z)
+                }
+            }
+        }
+    }
+
+    /**
+     * Performs an action for every position within the bounds of this placed blueprint.
      */
     fun forEachPosition(action: Consumer<BlockPos>) {
-        return positions.forEach(action)
+        forEachPosition { x, y, z -> action.accept(BlockPos(x, y, z)) }
     }
 
     /**
      * Clears the blueprint from the world.
      */
     fun clear(world: ServerWorld) {
-        forEachPosition { pos ->
-           world.setBlockState(pos, Blocks.AIR.defaultState, Block.NOTIFY_LISTENERS or Block.FORCE_STATE or Block.NO_REDRAW)
+        val air = Blocks.AIR.defaultState
+        val pos = BlockPos.Mutable()
+
+        forEachPosition { x, y, z ->
+            world.setBlockState(pos.set(x, y, z), air, Block.NOTIFY_LISTENERS or Block.FORCE_STATE or Block.NO_REDRAW)
         }
     }
 

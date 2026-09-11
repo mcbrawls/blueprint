@@ -3,4 +3,3 @@ accessWidener v2 named
 accessible field net/minecraft/server/MinecraftServer session Lnet/minecraft/world/level/storage/LevelStorage$Session;
 accessible field net/minecraft/resource/ResourceFinder directoryName Ljava/lang/String;
 accessible field net/minecraft/resource/ResourceFinder fileExtension Ljava/lang/String;
-accessible method net/minecraft/client/render/entity/EntityRenderer renderLabelIfPresent (Lnet/minecraft/client/render/entity/state/EntityRenderState;Lnet/minecraft/text/Text;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V

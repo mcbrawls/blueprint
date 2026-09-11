@@ -25,8 +25,9 @@ object BlueprintBatch {
 
                 synchronized(world) {
                     var i = 0
-                    blueprint.forEach { offset, (state, blockEntityNbt) ->
-                        Blueprint.placePosition(world, pos, offset, state, blockEntityNbt, entry.processor)
+                    val blockPos = BlockPos.Mutable()
+                    blueprint.forEach { x, y, z, state, blockEntityNbt ->
+                        Blueprint.placePosition(world, blockPos.set(pos.x + x, pos.y + y, pos.z + z), state, blockEntityNbt, entry.processor)
                         progress.set(++i / totalBlocks.toFloat())
                     }
                 }
