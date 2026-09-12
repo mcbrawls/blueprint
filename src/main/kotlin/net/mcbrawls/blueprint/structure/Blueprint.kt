@@ -92,9 +92,13 @@ data class Blueprint(
      * @return a placed blueprint
      */
     fun place(world: ServerWorld, position: BlockPos, processor: BlockStateProcessor? = null): PlacedBlueprint {
-        BulkPlacement(world).use { placement ->
-            forEach(processedPalette(processor)) { x, y, z, state, blockEntityNbt ->
-                placement.setBlock(position.x + x, position.y + y, position.z + z, state, blockEntityNbt)
+        val palette = processedPalette(processor)
+
+        BulkPlacement.onServerThread(world) {
+            BulkPlacement(world).use { placement ->
+                forEach(palette) { x, y, z, state, blockEntityNbt ->
+                    placement.setBlock(position.x + x, position.y + y, position.z + z, state, blockEntityNbt)
+                }
             }
         }
 
@@ -109,10 +113,13 @@ data class Blueprint(
         val progress = AtomicReference(0.0f)
 
         val future: CompletableFuture<PlacedBlueprint> = CompletableFuture.supplyAsync {
-            synchronized(world) {
-                var i = 0
+            // the palette is processed off the server thread; only the writes themselves need to be on it
+            val palette = processedPalette(processor)
+            var i = 0
+
+            BulkPlacement.onServerThread(world) {
                 BulkPlacement(world).use { placement ->
-                    forEach(processedPalette(processor)) { x, y, z, state, blockEntityNbt ->
+                    forEach(palette) { x, y, z, state, blockEntityNbt ->
                         placement.setBlock(position.x + x, position.y + y, position.z + z, state, blockEntityNbt)
                         progress.set(++i / totalBlocks.toFloat())
                     }

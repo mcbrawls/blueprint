@@ -27,6 +27,8 @@ object BlueprintTest : ModInitializer {
 
     override fun onInitialize() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
+            PlacementVerify.register(dispatcher)
+
             dispatcher.register(
                 CommandManager.literal("blueprint-test")
                     .executes { context ->

@@ -30,9 +30,12 @@ import net.minecraft.world.chunk.light.ChunkLightProvider
  * Unlike [ServerWorld.setBlockState] this never runs neighbour or comparator updates, so it is only suitable for bulk
  * writes that would have been made with [net.minecraft.block.Block.FORCE_STATE] anyway. Use it through [use] so the
  * flush always runs.
+ *
+ * Writing straight into a chunk section is only safe on the server thread, which owns the chunk map: off it a chunk can
+ * be unloaded and replaced part way through a placement, and every write made after that lands in a chunk the world no
+ * longer holds. Use [onServerThread] to get there from a worker thread.
  */
 class BulkPlacement(private val world: ServerWorld) : AutoCloseable {
-    private val server = checkNotNull(world.server) { "Bulk placement needs the world's server to flush on its thread" }
     private val chunkManager = world.chunkManager
     private val lightingProvider = chunkManager.lightingProvider
     private val pathNodeTypeCache = world.pathNodeTypeCache
@@ -49,6 +52,11 @@ class BulkPlacement(private val world: ServerWorld) : AutoCloseable {
      * Reused for the calls below, none of which hold onto the position they are given.
      */
     private val mutablePos = BlockPos.Mutable()
+
+    init {
+        val server = checkNotNull(world.server) { "Bulk placement needs the world's server" }
+        check(server.isOnThread) { "Bulk placement must run on the server thread; see BulkPlacement.onServerThread" }
+    }
 
     /**
      * Writes [state] at ([x], [y], [z]), reading [blockEntityNbt] into the block entity there if the state has one.
@@ -82,6 +90,9 @@ class BulkPlacement(private val world: ServerWorld) : AutoCloseable {
 
         val wasEmpty = section.isEmpty
         section.setBlockState(localX, localY, localZ, state)
+
+        // WorldChunk.setBlockState marks the chunk on every write; without it an unload pass drops what was written
+        chunk.markNeedsSaving()
 
         entry.heightmaps.forEach { heightmap -> heightmap.trackUpdate(localX, y, localZ, state) }
 
@@ -125,8 +136,7 @@ class BulkPlacement(private val world: ServerWorld) : AutoCloseable {
     }
 
     /**
-     * Marks every touched chunk for saving and resends it to its viewers. Runs on the server thread, which a placement
-     * launched through [Blueprint.placeWithProgress] is not on.
+     * Resends every touched chunk to its viewers.
      */
     override fun close() {
         if (touched.isEmpty()) {
@@ -139,18 +149,12 @@ class BulkPlacement(private val world: ServerWorld) : AutoCloseable {
         cachedPos = NO_CHUNK
         cachedChunk = null
 
-        if (Thread.currentThread() == server.thread) {
-            flush(entries)
-        } else {
-            server.execute { flush(entries) }
-        }
+        flush(entries)
     }
 
     private fun flush(entries: List<TouchedChunk>) {
         entries.forEach { entry ->
             val chunk = entry.chunk
-            chunk.markNeedsSaving()
-
             val players = PlayerLookup.tracking(world, chunk.pos)
             if (players.isEmpty()) {
                 return@forEach
@@ -209,6 +213,19 @@ class BulkPlacement(private val world: ServerWorld) : AutoCloseable {
     }
 
     companion object {
+        /**
+         * Runs [action] on [world]'s server thread, blocking the caller until it has run, or inline when already there.
+         *
+         * Placement writes into chunk sections directly, which only the thread owning the chunk map may do. Running the
+         * whole placement in one go also costs the server thread far less than a block at a time would: every
+         * [ServerWorld.setBlockState] from a worker thread hands the chunk lookup back to the server thread and waits
+         * for it, so a blueprint placed that way occupies the server thread once per block for as long as it takes.
+         */
+        fun onServerThread(world: ServerWorld, action: Runnable) {
+            val server = checkNotNull(world.server) { "Bulk placement needs the world's server" }
+            server.submitAndJoin(action)
+        }
+
         /**
          * A chunk that took at most this many blocks is resent as individual block updates rather than as a whole
          * chunk, so that placing a handful of blocks does not cost every viewer a chunk's worth of data.

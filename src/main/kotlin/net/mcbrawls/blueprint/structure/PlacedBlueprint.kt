@@ -154,8 +154,10 @@ data class PlacedBlueprint(
     fun clear(world: ServerWorld) {
         val air = Blocks.AIR.defaultState
 
-        BulkPlacement(world).use { placement ->
-            forEachPosition { x, y, z -> placement.setBlock(x, y, z, air) }
+        BulkPlacement.onServerThread(world) {
+            BulkPlacement(world).use { placement ->
+                forEachPosition { x, y, z -> placement.setBlock(x, y, z, air) }
+            }
         }
     }
 

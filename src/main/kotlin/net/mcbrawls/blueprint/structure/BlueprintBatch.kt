@@ -20,25 +20,25 @@ object BlueprintBatch {
         val totalBlocks = blueprints.values.sumOf(Blueprint::totalBlocks)
 
         val future: CompletableFuture<BatchResult> = CompletableFuture.supplyAsync {
-            // one placement session for the whole batch, so entries sharing a chunk cost one flush between them
-            val placedBlueprints = synchronized(world) {
-                var i = 0
+            // palettes are processed off the server thread; only the writes themselves need to be on it
+            val palettes = blueprints.mapValues { (entry, blueprint) -> blueprint.processedPalette(entry.processor) }
+            var i = 0
 
+            // one placement session for the whole batch, so entries sharing a chunk cost one flush between them
+            BulkPlacement.onServerThread(world) {
                 BulkPlacement(world).use { placement ->
-                    blueprints.map { (entry, blueprint) ->
+                    blueprints.forEach { (entry, blueprint) ->
                         val pos = entry.pos
 
-                        blueprint.forEach(blueprint.processedPalette(entry.processor)) { x, y, z, state, blockEntityNbt ->
+                        blueprint.forEach(palettes.getValue(entry)) { x, y, z, state, blockEntityNbt ->
                             placement.setBlock(pos.x + x, pos.y + y, pos.z + z, state, blockEntityNbt)
                             progress.set(++i / totalBlocks.toFloat())
                         }
-
-                        PlacedBlueprint(blueprint, pos)
                     }
                 }
             }
 
-            BatchResult(placedBlueprints.toSet())
+            BatchResult(blueprints.map { (entry, blueprint) -> PlacedBlueprint(blueprint, entry.pos) }.toSet())
         }
 
         return ProgressiveFuture(future, ProgressProvider(progress::get))
